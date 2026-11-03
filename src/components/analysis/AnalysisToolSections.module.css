@@ -9,3 +9,8 @@
 .toolSections :global(.mantine-Grid-inner) > :global(.mantine-Grid-col):not(:last-child) {
   padding: calc(var(--mantine-spacing-md) / 2);
 }
+
+/* Only Core Tools cards use w-1/4. Subtract the row's 16px gaps so four fit on one line. */
+.toolSections :global(.w-1\/4) {
+  width: calc(25% - 12px);
+}

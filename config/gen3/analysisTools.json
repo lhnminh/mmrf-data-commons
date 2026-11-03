@@ -36,6 +36,17 @@
           "hideCounts" : true,
           "appId" : "Repository",
           "countUnits": "Cases"
+        },
+        {
+          "title": "Chat",
+          "type": "application",
+          "hasDemo": false,
+          "loginRequired": false,
+          "description": "Ask questions about your cohort and run analyses in plain language.",
+          "icon": "/icons/apps/Chat.svg",
+          "hideCounts" : true,
+          "appId" : "Chat",
+          "countUnits": "Cases"
         }
       ]
     },
