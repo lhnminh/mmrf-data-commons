@@ -29,6 +29,7 @@
     "test:discovery": "node --test test/gen3-discovery-patch.test.cjs && jest --runInBand src/lib/content/loadAppConfig.unit.test.ts src/middleware-impl.unit.test.ts"
   },
   "dependencies": {
+    "@assistant-ui/react": "0.15.32",
     "@fontsource/montserrat": "^5.2.8",
     "@fontsource/noto-sans": "^5.2.10",
     "@fontsource/source-sans-pro": "^5.2.5",
