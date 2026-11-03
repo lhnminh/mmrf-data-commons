@@ -24,7 +24,7 @@ export const Default: Story = {
     const canvas = within(canvasElement);
     // Exercise the actual upstream cards, including Mantine's injected style
     // elements between columns, which a simplified local fixture would miss.
-    for (const title of ['Projects', 'Cohort Builder', 'Repository']) {
+    for (const title of ['Projects', 'Cohort Builder', 'Repository', 'Chat']) {
       const card = (await canvas.findByAltText(`${title} logo`)).closest('.mantine-Grid-inner');
       expect(card).not.toBeNull();
       const columns = card!.querySelectorAll('.mantine-Grid-col');
