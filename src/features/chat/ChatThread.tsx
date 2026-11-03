@@ -7,6 +7,14 @@ import {
   useAuiState,
 } from '@assistant-ui/react';
 import { SUGGESTED_PROMPTS } from './suggestedPrompts';
+import CorrelationPlotTool from './tools/CorrelationPlotTool';
+import ToolCallFallback from './tools/ToolCallRow';
+
+const TOOL_DISPLAYS = {
+  by_name: { correlation_plot: CorrelationPlotTool },
+  Fallback: ToolCallFallback,
+};
+const ASSISTANT_PARTS = { tools: TOOL_DISPLAYS };
 
 const COLUMN = 'mx-auto w-full max-w-[660px] px-4';
 const FOCUS_RING =
@@ -50,7 +58,7 @@ const UserMessage: React.FC = () => (
 const AssistantMessage: React.FC = () => (
   <MessagePrimitive.Root className={`${COLUMN} mt-2`}>
     <div className="break-words border-l-[3px] border-primary pl-3 font-content text-sm">
-      <MessagePrimitive.Parts />
+      <MessagePrimitive.Parts components={ASSISTANT_PARTS} />
     </div>
   </MessagePrimitive.Root>
 );
@@ -86,7 +94,11 @@ const ChatThread: React.FC = () => {
   return (
     // 460px is roughly the page chrome above the tool area, so the message box stays on screen.
     <ThreadPrimitive.Root className="flex h-[calc(100vh-460px)] min-h-[480px] flex-col bg-base-max">
-      <ThreadPrimitive.Viewport className="flex flex-1 flex-col overflow-y-auto overflow-x-hidden pt-6">
+      <ThreadPrimitive.Viewport
+        turnAnchor="top"
+        scrollToBottomOnInitialize={false}
+        className="flex flex-1 flex-col overflow-y-auto overflow-x-hidden pt-6"
+      >
         <AuiIf condition={(s) => s.thread.isEmpty}>
           <EmptyState />
         </AuiIf>
