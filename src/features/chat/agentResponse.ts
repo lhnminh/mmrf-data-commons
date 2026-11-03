@@ -31,11 +31,7 @@ export interface AgentResponse {
 
 const UNFINISHED_TOOL = 'The tool did not finish.';
 
-const toToolPart = (
-  call: AgentToolCall,
-  index: number,
-  recorded: boolean,
-) => {
+const toToolPart = (call: AgentToolCall, index: number) => {
   const part = {
     type: 'tool-call' as const,
     toolCallId: `${call.name}-${index}`,
@@ -44,7 +40,7 @@ const toToolPart = (
     argsText: JSON.stringify(call.input),
   };
   if (call.status === 'success') {
-    return { ...part, result: recorded ? { ...call.result, recorded } : call.result };
+    return { ...part, result: call.result };
   }
   // Every part needs a result, or the run would never end.
   return {
@@ -54,11 +50,8 @@ const toToolPart = (
   };
 };
 
-export const toMessageContent = (
-  response: AgentResponse,
-  { recorded = false }: { recorded?: boolean } = {},
-) => [
-  ...response.toolCalls.map((call, index) => toToolPart(call, index, recorded)),
+export const toMessageContent = (response: AgentResponse) => [
+  ...response.toolCalls.map(toToolPart),
   ...(response.message
     ? [{ type: 'text' as const, text: response.message }]
     : []),

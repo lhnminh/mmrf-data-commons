@@ -56,13 +56,4 @@ describe('toMessageContent', () => {
   it('produces no text part for an empty message', () => {
     expect(toMessageContent({ message: '', toolCalls: [] })).toEqual([]);
   });
-
-  it('marks results as recorded only when asked', () => {
-    const response = { message: '', toolCalls: [ok('t')] };
-    expect(toMessageContent(response)[0]).not.toHaveProperty('result.recorded');
-    expect(toMessageContent(response, { recorded: true })[0]).toHaveProperty(
-      'result.recorded',
-      true,
-    );
-  });
 });

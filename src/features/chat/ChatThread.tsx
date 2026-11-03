@@ -26,7 +26,8 @@ const EmptyState: React.FC = () => (
       What do you want to find out?
     </h2>
     <p className="mb-4 mt-1 font-content text-sm text-base-content-dark">
-      Chat will answer questions about the cohort selected above.
+      Compare survival between groups, or ask about research concepts and how
+      to use the Virtual Lab.
     </p>
     <div className="flex flex-col gap-2">
       {SUGGESTED_PROMPTS.map((prompt) => (
@@ -82,7 +83,7 @@ const Composer: React.FC<{ readonly isEmpty: boolean }> = ({ isEmpty }) => (
         </ComposerPrimitive.Send>
       </ComposerPrimitive.Root>
       <p className="mt-1.5 font-content text-xs text-base-content-dark">
-        Preview: not connected to the research agent yet.
+        Chat can&apos;t use your selected cohort yet, so comparisons cover all cases.
       </p>
     </div>
   </ThreadPrimitive.ViewportFooter>
