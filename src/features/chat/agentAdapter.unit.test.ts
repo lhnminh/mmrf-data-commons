@@ -1,4 +1,6 @@
-import { agentAdapter } from './agentAdapter';
+import { createAgentAdapter } from './agentAdapter';
+
+const agentAdapter = createAgentAdapter(() => undefined);
 
 describe('agentAdapter', () => {
   afterEach(() => jest.restoreAllMocks());
@@ -39,6 +41,43 @@ describe('agentAdapter', () => {
       type: 'text', text: 'The research agent is unavailable. Please try again.',
     });
     expect(result.status).toEqual({ type: 'complete', reason: 'stop' });
+  });
+
+  describe('selected cohort', () => {
+    const filter = { in: { 'demographic.gender': ['female'] } };
+    const sentBody = (spy: jest.SpyInstance) =>
+      JSON.parse(spy.mock.calls[0][1].body);
+    const run = (adapter: ReturnType<typeof createAgentAdapter>) =>
+      adapter.run({
+        messages: [{ role: 'user', content: [{ type: 'text', text: 'Hi' }] }],
+        abortSignal: new AbortController().signal,
+      } as unknown as Parameters<typeof agentAdapter.run>[0]);
+    const respond = () =>
+      jest.spyOn(global, 'fetch').mockResolvedValue({
+        ok: true,
+        json: async () => ({ message: 'OK' }),
+      } as Response);
+
+    it('sends the selected cohort as context', async () => {
+      const spy = respond();
+      await run(createAgentAdapter(() => filter));
+      expect(sentBody(spy).context).toEqual({ cohortFilter: filter });
+    });
+
+    it('sends no context when no filters are selected', async () => {
+      const spy = respond();
+      await run(createAgentAdapter(() => undefined));
+      expect(sentBody(spy)).not.toHaveProperty('context');
+    });
+
+    it('reads the cohort when the question is sent, not when created', async () => {
+      const spy = respond();
+      const selected: { filter?: typeof filter } = {};
+      const adapter = createAgentAdapter(() => selected.filter);
+      selected.filter = filter;
+      await run(adapter);
+      expect(sentBody(spy).context).toEqual({ cohortFilter: filter });
+    });
   });
 
   describe('tool calls', () => {

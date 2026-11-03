@@ -20,7 +20,8 @@ function textFromMessage(message: { content: readonly { type: string; text?: str
     .trim();
 }
 
-export const agentAdapter = {
+/** getCohortFilter is read per question, so it always reflects the cohort selected at that moment. */
+export const createAgentAdapter = (getCohortFilter: () => object | undefined) => ({
   async run({ messages, abortSignal }) {
     const turns: TextTurn[] = messages
       .filter((message) => message.role === 'user' || message.role === 'assistant')
@@ -34,11 +35,16 @@ export const agentAdapter = {
       return { content: [{ type: 'text' as const, text: 'Please enter a question.' }], status: COMPLETE };
     }
 
+    const cohortFilter = getCohortFilter();
     try {
       const response = await fetch('/agent/v1/prompts', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ prompt: latest.content, history: turns.slice(0, -1).slice(-10) }),
+        body: JSON.stringify({
+          prompt: latest.content,
+          history: turns.slice(0, -1).slice(-10),
+          ...(cohortFilter ? { context: { cohortFilter } } : {}),
+        }),
         signal: abortSignal,
       });
       if (!response.ok) throw new Error(`Agent returned HTTP ${response.status}`);
@@ -53,4 +59,4 @@ export const agentAdapter = {
       return { content: [{ type: 'text' as const, text: 'The research agent is unavailable. Please try again.' }], status: COMPLETE };
     }
   },
-} satisfies ChatModelAdapter;
+}) satisfies ChatModelAdapter;

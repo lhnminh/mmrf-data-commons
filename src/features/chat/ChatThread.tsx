@@ -9,12 +9,13 @@ import {
 import { SUGGESTED_PROMPTS } from './suggestedPrompts';
 import CorrelationPlotTool from './tools/CorrelationPlotTool';
 import ToolCallFallback from './tools/ToolCallRow';
+import MarkdownText from './MarkdownText';
 
 const TOOL_DISPLAYS = {
   by_name: { correlation_plot: CorrelationPlotTool },
   Fallback: ToolCallFallback,
 };
-const ASSISTANT_PARTS = { tools: TOOL_DISPLAYS };
+const ASSISTANT_PARTS = { Text: MarkdownText, tools: TOOL_DISPLAYS };
 
 const COLUMN = 'mx-auto w-full max-w-[660px] px-4';
 const FOCUS_RING =
@@ -26,8 +27,8 @@ const EmptyState: React.FC = () => (
       What do you want to find out?
     </h2>
     <p className="mb-4 mt-1 font-content text-sm text-base-content-dark">
-      Compare survival between groups, or ask about research concepts and how
-      to use the Virtual Lab.
+      Compare survival between groups in the cohort selected above, or ask about
+      research concepts and how to use the Virtual Lab.
     </p>
     <div className="flex flex-col gap-2">
       {SUGGESTED_PROMPTS.map((prompt) => (
@@ -83,7 +84,7 @@ const Composer: React.FC<{ readonly isEmpty: boolean }> = ({ isEmpty }) => (
         </ComposerPrimitive.Send>
       </ComposerPrimitive.Root>
       <p className="mt-1.5 font-content text-xs text-base-content-dark">
-        Chat can&apos;t use your selected cohort yet, so comparisons cover all cases.
+        Comparisons use the cohort selected above.
       </p>
     </div>
   </ThreadPrimitive.ViewportFooter>
