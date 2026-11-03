@@ -1,9 +1,9 @@
-import React, { useMemo, useRef } from 'react';
-import { AssistantRuntimeProvider, useLocalRuntime } from '@assistant-ui/react';
-import { useCoreSelector } from '@gen3/core';
-import { buildCohortGqlOperator } from '@/core/utils';
-import { createAgentAdapter } from './agentAdapter';
-import { selectSelectedCohortFilterSet } from './selectedCohortFilter';
+import React, { useMemo } from 'react';
+import { AssistantRuntimeProvider } from '@assistant-ui/react';
+import { useAgUiRuntime } from '@assistant-ui/react-ag-ui';
+import { HttpAgent } from '@ag-ui/client';
+
+export const AGENT_ROUTE = '/api/agent/agui';
 
 interface ChatRuntimeProviderProps {
   readonly children: React.ReactNode;
@@ -12,15 +12,8 @@ interface ChatRuntimeProviderProps {
 const ChatRuntimeProvider: React.FC<ChatRuntimeProviderProps> = ({
   children,
 }: ChatRuntimeProviderProps) => {
-  const cohortFilters = useCoreSelector(selectSelectedCohortFilterSet);
-  const cohortFiltersRef = useRef(cohortFilters);
-  cohortFiltersRef.current = cohortFilters;
-
-  const adapter = useMemo(
-    () => createAgentAdapter(() => buildCohortGqlOperator(cohortFiltersRef.current)),
-    [],
-  );
-  const runtime = useLocalRuntime(adapter);
+  const agent = useMemo(() => new HttpAgent({ url: AGENT_ROUTE }), []);
+  const runtime = useAgUiRuntime({ agent });
 
   return (
     <AssistantRuntimeProvider runtime={runtime}>

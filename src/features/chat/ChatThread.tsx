@@ -2,17 +2,16 @@ import React from 'react';
 import {
   AuiIf,
   ComposerPrimitive,
+  ErrorPrimitive,
   MessagePrimitive,
   ThreadPrimitive,
   useAuiState,
 } from '@assistant-ui/react';
 import { SUGGESTED_PROMPTS } from './suggestedPrompts';
-import CorrelationPlotTool from './tools/CorrelationPlotTool';
 import ToolCallFallback from './tools/ToolCallRow';
 import MarkdownText from './MarkdownText';
 
 const TOOL_DISPLAYS = {
-  by_name: { correlation_plot: CorrelationPlotTool },
   Fallback: ToolCallFallback,
 };
 const ASSISTANT_PARTS = { Text: MarkdownText, tools: TOOL_DISPLAYS };
@@ -27,8 +26,8 @@ const EmptyState: React.FC = () => (
       What do you want to find out?
     </h2>
     <p className="mb-4 mt-1 font-content text-sm text-base-content-dark">
-      Compare survival between groups in the cohort selected above, or ask about
-      research concepts and how to use the Virtual Lab.
+      Check whether the Virtual Lab is healthy. This early version of Chat
+      can&apos;t run analyses yet.
     </p>
     <div className="flex flex-col gap-2">
       {SUGGESTED_PROMPTS.map((prompt) => (
@@ -61,6 +60,11 @@ const AssistantMessage: React.FC = () => (
   <MessagePrimitive.Root className={`${COLUMN} mt-2`}>
     <div className="break-words border-l-[3px] border-primary pl-3 font-content text-sm">
       <MessagePrimitive.Parts components={ASSISTANT_PARTS} />
+      <MessagePrimitive.Error>
+        <ErrorPrimitive.Root className="mt-1 text-utility-error">
+          <ErrorPrimitive.Message />
+        </ErrorPrimitive.Root>
+      </MessagePrimitive.Error>
     </div>
   </MessagePrimitive.Root>
 );
@@ -73,8 +77,8 @@ const Composer: React.FC<{ readonly isEmpty: boolean }> = ({ isEmpty }) => (
       <ComposerPrimitive.Root className="flex items-end gap-2 rounded-md border border-secondary bg-base-max p-2 focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-primary">
         <ComposerPrimitive.Input
           rows={1}
-          placeholder="Ask about your cohort"
-          aria-label="Ask about your cohort"
+          placeholder="Ask about the Virtual Lab"
+          aria-label="Ask about the Virtual Lab"
           className="max-h-32 min-w-0 flex-1 resize-none border-0 bg-transparent p-1 font-content text-sm outline-none focus:ring-0"
         />
         <ComposerPrimitive.Send
@@ -83,9 +87,6 @@ const Composer: React.FC<{ readonly isEmpty: boolean }> = ({ isEmpty }) => (
           Send
         </ComposerPrimitive.Send>
       </ComposerPrimitive.Root>
-      <p className="mt-1.5 font-content text-xs text-base-content-dark">
-        Comparisons use the cohort selected above.
-      </p>
     </div>
   </ThreadPrimitive.ViewportFooter>
 );

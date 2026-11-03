@@ -11,6 +11,12 @@ export const toolStatus = (isError?: boolean, result?: unknown): ToolStatus => {
 export const toolError = (result: unknown) =>
   (result as { error?: string } | undefined)?.error;
 
+/** Gateway names tools <target>___<tool>; people only need the tool. */
+export const displayToolName = (toolName: string) => {
+  const separator = toolName.indexOf('___');
+  return separator < 0 ? toolName : toolName.slice(separator + 3);
+};
+
 interface ToolRowProps {
   readonly title: string;
   readonly detail?: string;
@@ -45,7 +51,7 @@ const ToolCallFallback: ToolCallMessagePartComponent = ({
   isError,
 }) => (
   <ToolRow
-    title={toolName}
+    title={displayToolName(toolName)}
     status={toolStatus(isError, result)}
     message={isError ? toolError(result) : undefined}
   />
