@@ -8,9 +8,9 @@ import {
 } from '@assistant-ui/react';
 
 const SUGGESTED_PROMPTS = [
-  'Compare survival between CGS high-risk and standard-risk patients',
-  'Show the top mutated genes in Black or African American patients',
-  'Find the top differentially expressed genes between KRAS-mutated and non-mutated patients',
+  'What is a cohort in the Virtual Lab?',
+  'What does a correlation plot show?',
+  'How should I interpret a p-value?',
 ];
 
 const COLUMN = 'mx-auto w-full max-w-[660px] px-4';
@@ -23,7 +23,7 @@ const EmptyState: React.FC = () => (
       What do you want to find out?
     </h2>
     <p className="mb-4 mt-1 font-content text-sm text-base-content-dark">
-      Chat will answer questions about the cohort selected above.
+      Ask about research concepts and how to use the Virtual Lab.
     </p>
     <div className="flex flex-col gap-2">
       {SUGGESTED_PROMPTS.map((prompt) => (
@@ -79,7 +79,7 @@ const Composer: React.FC<{ readonly isEmpty: boolean }> = ({ isEmpty }) => (
         </ComposerPrimitive.Send>
       </ComposerPrimitive.Root>
       <p className="mt-1.5 font-content text-xs text-base-content-dark">
-        Preview: not connected to the research agent yet.
+          The agent cannot inspect your cohort or run analyses yet.
       </p>
     </div>
   </ThreadPrimitive.ViewportFooter>
