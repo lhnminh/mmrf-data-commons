@@ -6,12 +6,7 @@ import {
   ThreadPrimitive,
   useAuiState,
 } from '@assistant-ui/react';
-
-const SUGGESTED_PROMPTS = [
-  'Compare survival between CGS high-risk and standard-risk patients',
-  'Show the top mutated genes in Black or African American patients',
-  'Find the top differentially expressed genes between KRAS-mutated and non-mutated patients',
-];
+import { SUGGESTED_PROMPTS } from './suggestedPrompts';
 
 const COLUMN = 'mx-auto w-full max-w-[660px] px-4';
 const FOCUS_RING =

@@ -17,7 +17,7 @@ export interface AgentToolResult {
 
 export interface AgentToolCall {
   readonly name: string;
-  readonly input: Record<string, unknown>;
+  readonly input: Readonly<Record<string, string | number | boolean | null>>;
   readonly status: 'started' | 'success' | 'error';
   readonly result?: AgentToolResult;
   readonly error?: string;
