@@ -83,15 +83,19 @@ const describeOperation = (field: string, operation: Operation) => {
   return plain ? `${name}: ${(operands as unknown[]).join(', ')}` : name;
 };
 
-/** The cohort's name, as the agent's tools write it. Case IDs are never listed. */
-export const cohortLabel = (filterSet: FilterSet): string => {
+/** One label per filter. Case IDs are never listed. */
+export const cohortFilterLabels = (filterSet: FilterSet): ReadonlyArray<string> => {
   const entries = Object.entries(filterSet.root);
-  if (entries.length === 0) return 'All cases';
   const named = entries
     .filter(([field]) => !isCaseIdField(field))
     .map(([field, operation]) => describeOperation(field, operation));
-  const hasCaseIds = named.length < entries.length;
-  return [...(hasCaseIds ? ['Selected cases'] : []), ...named].join('; ');
+  return named.length < entries.length ? ['Selected cases', ...named] : named;
+};
+
+/** The cohort's name, as the agent's tools write it. */
+export const cohortLabel = (filterSet: FilterSet): string => {
+  const labels = cohortFilterLabels(filterSet);
+  return labels.length > 0 ? labels.join('; ') : 'All cases';
 };
 
 interface HistoryEntry {

@@ -3,11 +3,14 @@ import {
   CohortHistory,
   CohortSync,
   changeActions,
+  cohortFilterLabels,
   cohortLabel,
   planApply,
   type CohortChange,
   type CohortState,
 } from './cohortSync';
+
+import { CASE_ID_FIELD } from '@/core/constants';
 
 const INDEX = 'case_centric';
 const RACE: CohortChange = { field: 'demographic.race', label: 'Race', values: ['black or african american'], op: 'set' };
@@ -287,5 +290,25 @@ describe('CohortSync', () => {
     listener.mockClear();
     sync.undo(2);
     expect(listener).not.toHaveBeenCalled();
+  });
+});
+
+describe('cohortFilterLabels', () => {
+  it('labels each filter', () => {
+    expect(cohortFilterLabels(set({ 'demographic.race': raceOp, 'demographic.gender': genderOp }))).toEqual([
+      'Race: black or african american',
+      'Sex: female',
+    ]);
+  });
+
+  it('is empty with no filters', () => {
+    expect(cohortFilterLabels(NONE)).toEqual([]);
+  });
+
+  it('names case IDs without listing them', () => {
+    const labels = cohortFilterLabels(
+      set({ [CASE_ID_FIELD]: { operator: 'in', field: CASE_ID_FIELD, operands: ['SYNTH-CASE-0001'] } }),
+    );
+    expect(labels).toEqual(['Selected cases']);
   });
 });
