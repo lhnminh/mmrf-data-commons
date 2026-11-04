@@ -110,3 +110,16 @@ describe('linkableSourcesKey', () => {
     expect(linkableSourcesKey(message([tool('a', '148 samples')]), 'a', { type: 'running' })).toBe('[]');
   });
 });
+
+describe('toolSources titles', () => {
+  it('titles the gene clustering tool', () => {
+    const part = {
+      type: 'tool-call',
+      toolCallId: 't1',
+      toolName: 'virtual-lab___show_gene_clustering',
+      result: { summary: '167 cases.' },
+    };
+
+    expect(toolSources([part])[0].title).toBe('Gene Expression Clustering');
+  });
+});
