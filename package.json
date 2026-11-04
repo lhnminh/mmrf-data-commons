@@ -26,9 +26,7 @@
     "test:umap-release": "node --test test/umap-release.test.cjs",
     "test:navigation-auth": "node --test test/navigation-auth.test.cjs && jest --runInBand src/middleware-impl.unit.test.ts",
     "test:diagnosis-age": "jest --runInBand src/features/cohortComparison/FacetCard/utils.unit.test.ts src/core/features/cohortComparison/cohortFacetSlice.unit.test.ts src/features/cases/ClinicalSummary/DiagnosesTables.unit.test.tsx src/features/cDave/diagnosisAge.unit.test.ts",
-    "test:discovery": "node --test test/gen3-discovery-patch.test.cjs && jest --runInBand src/lib/content/loadAppConfig.unit.test.ts src/middleware-impl.unit.test.ts",
-    "test:e2e": "playwright test",
-    "test:e2e:live": "playwright test --project=live"
+    "test:discovery": "node --test test/gen3-discovery-patch.test.cjs && jest --runInBand src/lib/content/loadAppConfig.unit.test.ts src/middleware-impl.unit.test.ts"
   },
   "dependencies": {
     "@ag-ui/client": "1.0.3",
@@ -86,7 +84,6 @@
     "@eslint/js": "^9.39.2",
     "@gen3/toolsff": "^0.12.66",
     "@next/eslint-plugin-next": "^16.3.0",
-    "@playwright/test": "1.58.2",
     "@storybook/addon-a11y": "^10.5.10",
     "@storybook/addon-docs": "^10.5.10",
     "@storybook/addon-onboarding": "^10.5.10",
