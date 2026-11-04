@@ -4,9 +4,12 @@ import SurvivalToolUI, { survivalPlots } from './SurvivalToolUI';
 
 const mockChart = jest.fn();
 
-jest.mock('next/dynamic', () => () => (props: object) => {
-  mockChart(props);
-  return <div data-testid="survival-chart" />;
+jest.mock('next/dynamic', () => () => {
+  const Chart = (props: object) => {
+    mockChart(props);
+    return <div data-testid="survival-chart" />;
+  };
+  return Chart;
 });
 
 jest.mock('./ChartFrame', () => ({
@@ -30,13 +33,13 @@ const COMPARISON = {
 
 const show = (result: unknown, args: object = {}, isError = false) =>
   render(
-    React.createElement(SurvivalToolUI as React.FC<object>, {
+    React.createElement(SurvivalToolUI as unknown as React.FC<object>, {
       toolName: 'virtual-lab___show_survival',
       args,
       result,
       isError,
       status: { type: 'complete' },
-    }),
+    } as object),
   );
 
 describe('SurvivalToolUI', () => {
