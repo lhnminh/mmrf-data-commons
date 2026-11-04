@@ -1,5 +1,6 @@
 import React from 'react';
 import { useAuiState } from '@assistant-ui/react';
+import { useEvidenceHighlighted } from '../ChatEvidence';
 import { useCohortFilterForRevision } from '../useCohortSync';
 
 export interface ChartCohort {
@@ -48,14 +49,15 @@ interface ChartFrameProps {
 }
 
 /** A chart and the cohort it ran on. The filter comes from the revision, so a chart can't drift to the selected cohort. */
-const ChartFrame: React.FC<ChartFrameProps> = ({ title, cohort, footer, children }: ChartFrameProps) => {
+const ChartFrame: React.FC<ChartFrameProps> = ({ title, cohort, toolCallId, footer, children }: ChartFrameProps) => {
+  const isHighlighted = useEvidenceHighlighted(toolCallId);
   const filter = useCohortFilterForRevision(cohort?.revision);
   const isRunning = useAuiState((s) => s.thread.isRunning);
 
   return (
     <div
       data-testid="chart-frame"
-      className="my-3 overflow-hidden rounded-[10px] border border-base-lighter bg-base-max"
+      className={`my-3 overflow-hidden rounded-[10px] border border-base-lighter bg-base-max ${isHighlighted ? 'ring-2 ring-primary' : ''}`}
     >
       {(title || cohort?.label) && (
         <p className="flex flex-wrap items-baseline gap-x-2 border-b border-base-lighter bg-base-lightest px-3 py-2 font-content text-[12.5px]">

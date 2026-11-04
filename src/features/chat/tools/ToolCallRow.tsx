@@ -1,19 +1,13 @@
 import React from 'react';
 import { ThreadPrimitive, type ToolCallMessagePartComponent } from '@assistant-ui/react';
+import { evidenceElementId, useEvidenceHighlighted } from '../ChatEvidence';
+import { displayToolName, parseResult } from './toolResult';
 
 export type ToolStatus = 'Running' | 'Done' | 'Failed';
 
 type PartStatus = { readonly type: string; readonly reason?: string };
 
-/** The runtime can hand a result over as JSON text or as the parsed object. */
-export const parseResult = (result: unknown): unknown => {
-  if (typeof result !== 'string') return result;
-  try {
-    return JSON.parse(result);
-  } catch {
-    return result;
-  }
-};
+export { displayToolName, parseResult };
 
 const resultFields = (result: unknown) => {
   const parsed = parseResult(result);
@@ -43,12 +37,6 @@ export const toolMessage = (isError?: boolean, result?: unknown, part?: PartStat
   if (isError) return textOf(error) ?? textOf(summary);
   if (result === undefined) return part?.type === 'incomplete' ? 'This step did not finish.' : undefined;
   return toolFailure(result) ?? textOf(summary);
-};
-
-/** Gateway names tools <target>___<tool>; people only need the tool. */
-export const displayToolName = (toolName: string) => {
-  const separator = toolName.indexOf('___');
-  return separator < 0 ? toolName : toolName.slice(separator + 3);
 };
 
 export const CHAT_BUTTON =
@@ -109,16 +97,19 @@ export const ToolRow: React.FC<ToolRowProps> = ({
   status,
   message,
   settings,
+  toolCallId,
   children,
 }: ToolRowProps) => {
+  const isHighlighted = useEvidenceHighlighted(toolCallId);
   const entries = settingEntries(settings);
   const isFailed = status === 'Failed';
   const failure = isFailed ? message : undefined;
   return (
     <div
       data-tool-step
+      id={toolCallId ? evidenceElementId(toolCallId) : undefined}
       // A line joins this step to the one before it, when nothing sits between them.
-      className="relative rounded-md py-1.5 pl-6 pr-2.5 font-content text-[13px] [[data-tool-step]+&]:before:absolute [[data-tool-step]+&]:before:-top-2 [[data-tool-step]+&]:before:bottom-[calc(100%-13px)] [[data-tool-step]+&]:before:left-[8.5px] [[data-tool-step]+&]:before:w-px [[data-tool-step]+&]:before:bg-base-lighter [[data-tool-step]+&]:before:content-['']"
+      className={`relative rounded-md py-1.5 pl-6 pr-2.5 font-content text-[13px] [[data-tool-step]+&]:before:absolute [[data-tool-step]+&]:before:-top-2 [[data-tool-step]+&]:before:bottom-[calc(100%-13px)] [[data-tool-step]+&]:before:left-[8.5px] [[data-tool-step]+&]:before:w-px [[data-tool-step]+&]:before:bg-base-lighter [[data-tool-step]+&]:before:content-[''] ${isHighlighted ? 'bg-seashell' : ''}`}
     >
       <span aria-hidden="true" className={`absolute left-1 top-[13px] h-2.5 w-2.5 rounded-full ${STEP_DOT[status]}`} />
       <div className="flex flex-wrap items-baseline gap-x-2.5">

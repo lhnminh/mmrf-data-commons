@@ -1,5 +1,7 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { ChatEvidenceProvider, evidenceElementId, linkChildren } from '../ChatEvidence';
 import {
   displayToolName,
   ToolRow,
@@ -153,5 +155,21 @@ describe('ToolRow details', () => {
     const { container } = render(<ToolRow title="Step" status="Failed" message="Timed out" />);
     expect(details(container)?.open).toBe(true);
     expect(screen.getByText('Timed out')).toBeTruthy();
+  });
+});
+
+describe('ToolRow evidence', () => {
+  it('stands out while a number from this step is under the pointer', async () => {
+    const source = { toolCallId: 'a', title: 'OncoMatrix', summary: '148 samples' };
+    const { container } = render(
+      <ChatEvidenceProvider>
+        <ToolRow title="Step" status="Done" toolCallId="a" />
+        <p>{linkChildren('148', new Map([['148', [source]]]))}</p>
+      </ChatEvidenceProvider>,
+    );
+    const step = container.querySelector(`#${evidenceElementId('a')}`);
+    expect(step?.classList.contains('bg-seashell')).toBe(false);
+    await userEvent.hover(screen.getByRole('button', { name: '148, from OncoMatrix' }));
+    expect(step?.classList.contains('bg-seashell')).toBe(true);
   });
 });

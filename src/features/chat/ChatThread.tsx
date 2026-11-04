@@ -7,6 +7,7 @@ import {
   ThreadPrimitive,
   useAuiState,
 } from '@assistant-ui/react';
+import { ChatEvidenceProvider } from './ChatEvidence';
 import { chatErrorMessage } from './chatError';
 import { SUGGESTED_PROMPTS } from './suggestedPrompts';
 import ToolCallFallback from './tools/ToolCallRow';
@@ -112,21 +113,23 @@ const ChatThread: React.FC = () => {
   return (
     // 120px is roughly Chat's slim frame above the thread, so the message box stays on screen.
     <ThreadPrimitive.Root className="flex h-[calc(100vh-120px)] min-h-[480px] flex-col bg-base-max">
-      <ThreadPrimitive.Viewport
-        turnAnchor="top"
-        scrollToBottomOnInitialize={false}
-        className="flex flex-1 flex-col overflow-y-auto overflow-x-hidden pt-8"
-      >
-        <AuiIf condition={(s) => s.thread.isEmpty}>
-          <EmptyState />
-        </AuiIf>
-        <ThreadPrimitive.Messages>
-          {({ message }) =>
-            message.role === 'user' ? <UserMessage /> : <AssistantMessage />
-          }
-        </ThreadPrimitive.Messages>
-        <Composer isEmpty={isEmpty} />
-      </ThreadPrimitive.Viewport>
+      <ChatEvidenceProvider>
+        <ThreadPrimitive.Viewport
+          turnAnchor="top"
+          scrollToBottomOnInitialize={false}
+          className="flex flex-1 flex-col overflow-y-auto overflow-x-hidden pt-8"
+        >
+          <AuiIf condition={(s) => s.thread.isEmpty}>
+            <EmptyState />
+          </AuiIf>
+          <ThreadPrimitive.Messages>
+            {({ message }) =>
+              message.role === 'user' ? <UserMessage /> : <AssistantMessage />
+            }
+          </ThreadPrimitive.Messages>
+          <Composer isEmpty={isEmpty} />
+        </ThreadPrimitive.Viewport>
+      </ChatEvidenceProvider>
     </ThreadPrimitive.Root>
   );
 };
