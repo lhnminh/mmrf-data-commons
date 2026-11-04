@@ -52,7 +52,7 @@ export const displayToolName = (toolName: string) => {
 };
 
 export const CHAT_BUTTON =
-  'rounded border border-secondary px-2 py-0.5 font-content text-xs font-semibold hover:bg-base-lightest disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary';
+  'rounded-full border border-primary bg-base-max px-3 py-1 font-heading text-xs font-semibold text-primary hover:bg-primary hover:text-white disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary';
 
 interface ToolSuggestionProps {
   readonly prompt: string;
@@ -91,8 +91,16 @@ interface ToolRowProps {
   readonly message?: string;
   /** The tool's input, shown when the step is expanded. */
   readonly settings?: unknown;
+  /** Identifies this step to anything that refers to it. */
+  readonly toolCallId?: string;
   readonly children?: React.ReactNode;
 }
+
+const STEP_DOT: Record<ToolStatus, string> = {
+  Running: 'border-2 border-primary bg-base-max motion-safe:animate-pulse',
+  Done: 'bg-primary',
+  Failed: 'bg-rust',
+};
 
 /** One tool call in the conversation: what ran, on what, and how it ended. Expands to its settings and any error. */
 export const ToolRow: React.FC<ToolRowProps> = ({
@@ -107,34 +115,42 @@ export const ToolRow: React.FC<ToolRowProps> = ({
   const isFailed = status === 'Failed';
   const failure = isFailed ? message : undefined;
   return (
-    <div className="rounded border border-base-lighter px-2.5 py-1.5 font-content text-xs">
-      <div className="flex flex-wrap items-baseline gap-x-2">
-        <span className="font-heading font-semibold">{title}</span>
+    <div
+      data-tool-step
+      // A line joins this step to the one before it, when nothing sits between them.
+      className="relative rounded-md py-1.5 pl-6 pr-2.5 font-content text-[13px] [[data-tool-step]+&]:before:absolute [[data-tool-step]+&]:before:-top-2 [[data-tool-step]+&]:before:bottom-[calc(100%-13px)] [[data-tool-step]+&]:before:left-[8.5px] [[data-tool-step]+&]:before:w-px [[data-tool-step]+&]:before:bg-base-lighter [[data-tool-step]+&]:before:content-['']"
+    >
+      <span aria-hidden="true" className={`absolute left-1 top-[13px] h-2.5 w-2.5 rounded-full ${STEP_DOT[status]}`} />
+      <div className="flex flex-wrap items-baseline gap-x-2.5">
+        <span className="font-heading font-semibold text-gunmetal">{title}</span>
         {detail && <span className="min-w-0 break-words">{detail}</span>}
         <span
-          className={`ml-auto font-semibold ${status === 'Failed' ? 'text-utility-error' : ''}`}
+          className={
+            status === 'Done' ? 'sr-only' : `font-semibold ${isFailed ? 'text-rust' : 'text-gunmetal'}`
+          }
         >
           {status}
         </span>
       </div>
       {message && !isFailed && <p className="mt-1 break-words">{message}</p>}
+      {children}
       {(failure || entries.length > 0) && (
-        <details open={isFailed} className="mt-1">
-          <summary className="cursor-pointer">Details</summary>
+        <details open={isFailed} className="mt-1 text-xs">
+          <summary className="w-max cursor-pointer">Inputs</summary>
           {failure && <p className="mt-1 break-words">{failure}</p>}
           {entries.map(([name, value]) => (
-            <p key={name} className="mt-1 break-all">
+            <p key={name} className="mt-1 break-all font-mono">
               <span className="font-semibold">{name}:</span> {value}
             </p>
           ))}
         </details>
       )}
-      {children}
     </div>
   );
 };
 
 const ToolCallFallback: ToolCallMessagePartComponent = ({
+  toolCallId,
   toolName,
   args,
   result,
@@ -142,6 +158,7 @@ const ToolCallFallback: ToolCallMessagePartComponent = ({
   status,
 }) => (
   <ToolRow
+    toolCallId={toolCallId}
     title={displayToolName(toolName)}
     status={toolStatus(isError, result, status)}
     message={toolMessage(isError, result, status)}

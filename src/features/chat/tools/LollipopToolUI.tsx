@@ -19,7 +19,7 @@ interface LollipopResult {
   readonly plot?: { readonly gene?: string };
 }
 
-const LollipopToolUI: ToolCallMessagePartComponent = ({ args, result, isError, status }) => {
+const LollipopToolUI: ToolCallMessagePartComponent = ({ toolCallId, args, result, isError, status }) => {
   const rowStatus = toolStatus(isError, result, status);
   const parsed = (rowStatus === 'Done' ? parseResult(result) : undefined) as LollipopResult | undefined;
   const asked = (args as { gene?: unknown } | undefined)?.gene;
@@ -28,13 +28,19 @@ const LollipopToolUI: ToolCallMessagePartComponent = ({ args, result, isError, s
 
   if (!parsed?.plot) {
     return (
-      <ToolRow title={title} status={rowStatus} settings={args} message={toolMessage(isError, result, status)} />
+      <ToolRow
+        toolCallId={toolCallId}
+        title={title}
+        status={rowStatus}
+        settings={args}
+        message={toolMessage(isError, result, status)}
+      />
     );
   }
   return (
     <>
-      <ToolRow title={title} status={rowStatus} settings={args} />
-      <ChartFrame cohort={parsed.cohort}>
+      <ToolRow toolCallId={toolCallId} title={title} status={rowStatus} settings={args} />
+      <ChartFrame toolCallId={toolCallId} title={gene ? `Lollipop plot · ${gene}` : 'Lollipop plot'} cohort={parsed.cohort}>
         {(filter) => <ProteinPaintWrapper filter0Override={filter} gene={gene} />}
       </ChartFrame>
     </>

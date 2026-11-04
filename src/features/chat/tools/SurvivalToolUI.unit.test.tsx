@@ -61,11 +61,11 @@ describe('SurvivalToolUI', () => {
     expect(screen.getByText('Correlation Plot · Survival')).toBeInTheDocument();
   });
 
-  it('shows Details with compareBy', () => {
+  it('shows Inputs with compareBy', () => {
     show(COMPARISON, { compareBy: 'CGS risk' });
 
     expect(screen.getByText('compareBy:')).toBeInTheDocument();
-    expect(screen.getByText('Details')).toBeInTheDocument();
+    expect(screen.getByText('Inputs')).toBeInTheDocument();
   });
 
   it('shows the message and no chart without a plot', () => {

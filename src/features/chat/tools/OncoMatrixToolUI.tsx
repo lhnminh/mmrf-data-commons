@@ -23,7 +23,7 @@ interface MatrixResult {
 const FollowUps: React.FC<{ readonly genes: ReadonlyArray<{ readonly gene: string }> }> = ({ genes }) => {
   const isRunning = useAuiState((s) => s.thread.isRunning);
   return (
-    <div className="mt-2 flex flex-wrap gap-2">
+    <div className="flex flex-wrap gap-2">
       {genes.slice(0, MAX_FOLLOW_UPS).map(({ gene }) => (
         <ToolSuggestion key={gene} prompt={`Show the Lollipop plot for ${gene}.`} disabled={isRunning}>
           Lollipop for {gene}
@@ -33,7 +33,7 @@ const FollowUps: React.FC<{ readonly genes: ReadonlyArray<{ readonly gene: strin
   );
 };
 
-const OncoMatrixToolUI: ToolCallMessagePartComponent = ({ args, result, isError, status }) => {
+const OncoMatrixToolUI: ToolCallMessagePartComponent = ({ toolCallId, args, result, isError, status }) => {
   const rowStatus = toolStatus(isError, result, status);
   const parsed = (rowStatus === 'Done' ? parseResult(result) : undefined) as MatrixResult | undefined;
   const genes = parsed?.genes ?? [];
@@ -41,17 +41,27 @@ const OncoMatrixToolUI: ToolCallMessagePartComponent = ({ args, result, isError,
 
   if (!parsed?.plot) {
     return (
-      <ToolRow title={title} status={rowStatus} settings={args} message={toolMessage(isError, result, status)} />
+      <ToolRow
+        toolCallId={toolCallId}
+        title={title}
+        status={rowStatus}
+        settings={args}
+        message={toolMessage(isError, result, status)}
+      />
     );
   }
   const { maxGenes } = parsed.plot;
   return (
     <>
-      <ToolRow title={title} status={rowStatus} settings={args} />
-      <ChartFrame cohort={parsed.cohort}>
+      <ToolRow toolCallId={toolCallId} title={title} status={rowStatus} settings={args} />
+      <ChartFrame
+        toolCallId={toolCallId}
+        title={TITLE}
+        cohort={parsed.cohort}
+        footer={genes.length > 0 ? <FollowUps genes={genes} /> : undefined}
+      >
         {(filter) => <MatrixWrapper chartType="matrix" filter0Override={filter} maxGenes={maxGenes} />}
       </ChartFrame>
-      <FollowUps genes={genes} />
     </>
   );
 };

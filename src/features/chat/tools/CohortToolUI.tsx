@@ -46,11 +46,17 @@ const Undo: React.FC<{ readonly result: CohortResult }> = ({ result }) => {
   );
 };
 
-const UpdatedCohort: React.FC<{ readonly result: CohortResult; readonly settings: unknown }> = ({ result, settings }) => {
+interface CohortOutcomeProps {
+  readonly result: CohortResult;
+  readonly settings: unknown;
+  readonly toolCallId?: string;
+}
+
+const UpdatedCohort: React.FC<CohortOutcomeProps> = ({ result, settings, toolCallId }) => {
   const mapping = (result.changes ?? []).map(describeChange).join(' · ');
   const hasCounts = result.casesBefore !== undefined && result.casesAfter !== undefined;
   return (
-    <ToolRow title={`${TITLE} · Updated cohort`} status="Done" settings={settings}>
+    <ToolRow toolCallId={toolCallId} title={`${TITLE} · Updated cohort`} status="Done" settings={settings}>
       <p className="mt-1 break-words">
         {mapping}
         {hasCounts && (
@@ -65,8 +71,8 @@ const UpdatedCohort: React.FC<{ readonly result: CohortResult; readonly settings
   );
 };
 
-const AmbiguousCohort: React.FC<{ readonly result: CohortResult; readonly settings: unknown }> = ({ result, settings }) => (
-  <ToolRow title={`${TITLE} · Which one?`} status="Done" message={result.summary} settings={settings}>
+const AmbiguousCohort: React.FC<CohortOutcomeProps> = ({ result, settings, toolCallId }) => (
+  <ToolRow toolCallId={toolCallId} title={`${TITLE} · Which one?`} status="Done" message={result.summary} settings={settings}>
     <div className="mt-1 flex flex-wrap gap-2">
       {(result.options ?? []).map((option) => (
         <ToolSuggestion key={option} prompt={`Use ${option} for ${result.label ?? 'that filter'}.`}>
@@ -77,18 +83,19 @@ const AmbiguousCohort: React.FC<{ readonly result: CohortResult; readonly settin
   </ToolRow>
 );
 
-const CohortToolUI: ToolCallMessagePartComponent = ({ args, result, isError, status }) => {
+const CohortToolUI: ToolCallMessagePartComponent = ({ toolCallId, args, result, isError, status }) => {
   const rowStatus = toolStatus(isError, result, status);
   if (rowStatus === 'Running') {
     return (
-      <div data-testid="cohort-tool-skeleton" className="animate-pulse">
-        <ToolRow title={`${TITLE} · Updating cohort`} status="Running" settings={args} />
+      <div data-testid="cohort-tool-skeleton" className="motion-safe:animate-pulse">
+        <ToolRow toolCallId={toolCallId} title={`${TITLE} · Updating cohort`} status="Running" settings={args} />
       </div>
     );
   }
   if (rowStatus === 'Failed') {
     return (
       <ToolRow
+        toolCallId={toolCallId}
         title={`${TITLE} · Update cohort`}
         status="Failed"
         message={toolMessage(isError, result, status)}
@@ -97,10 +104,11 @@ const CohortToolUI: ToolCallMessagePartComponent = ({ args, result, isError, sta
     );
   }
   const parsed = parseResult(result) as CohortResult;
-  if (parsed?.status === 'ok') return <UpdatedCohort result={parsed} settings={args} />;
-  if (parsed?.status === 'ambiguous') return <AmbiguousCohort result={parsed} settings={args} />;
+  if (parsed?.status === 'ok') return <UpdatedCohort result={parsed} settings={args} toolCallId={toolCallId} />;
+  if (parsed?.status === 'ambiguous') return <AmbiguousCohort result={parsed} settings={args} toolCallId={toolCallId} />;
   return (
     <ToolRow
+      toolCallId={toolCallId}
       title={`${TITLE} · Cohort not changed`}
       status="Done"
       message={toolMessage(isError, result, status)}

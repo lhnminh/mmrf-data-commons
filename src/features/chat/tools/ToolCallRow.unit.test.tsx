@@ -1,6 +1,14 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import { displayToolName, ToolRow, toolFailure, toolMessage, toolStatus, ToolSuggestion } from './ToolCallRow';
+import {
+  displayToolName,
+  ToolRow,
+  toolFailure,
+  toolMessage,
+  toolStatus,
+  ToolSuggestion,
+  type ToolStatus,
+} from './ToolCallRow';
 
 const mockSuggestion = jest.fn();
 
@@ -103,6 +111,20 @@ describe('ToolRow details', () => {
     expect(details(container)?.textContent).toContain('KRAS');
     expect(details(container)?.textContent).toContain('3');
     expect(details(container)?.textContent).toContain('[{"a":1}]');
+  });
+
+  it('names the settings Inputs', () => {
+    const { container } = render(<ToolRow title="Step" status="Done" settings={{ gene: 'KRAS' }} />);
+    expect(container.querySelector('summary')?.textContent).toBe('Inputs');
+  });
+
+  it.each<[ToolStatus, boolean]>([
+    ['Running', true],
+    ['Done', false],
+    ['Failed', true],
+  ])('shows the %s status as text, visibly: %s', (status, visible) => {
+    render(<ToolRow title="Step" status={status} />);
+    expect(screen.getByText(status).classList.contains('sr-only')).toBe(!visible);
   });
 
   it('has nothing to expand without settings', () => {

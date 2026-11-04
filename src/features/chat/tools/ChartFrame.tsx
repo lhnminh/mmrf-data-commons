@@ -33,34 +33,37 @@ const cohortText = ({ label, caseCount }: ChartCohort) => {
     caseCount === undefined
       ? undefined
       : `${caseCount.toLocaleString('en-US')} ${caseCount === 1 ? 'case' : 'cases'}`;
-  return `Cohort: ${[label, cases].filter(Boolean).join(', ')}`;
+  return `on ${[label, cases].filter(Boolean).join(', ')}`;
 };
 
 interface ChartFrameProps {
+  readonly title?: string;
   readonly cohort?: ChartCohort;
+  /** Identifies this chart to anything that refers to it. */
+  readonly toolCallId?: string;
+  /** Sits under the chart, for actions such as follow-up questions. */
+  readonly footer?: React.ReactNode;
   /** Draws the chart on the filter this result ran on. Never called without one. */
   readonly children: (filter: object) => React.ReactNode;
 }
 
-/**
- * A chart and the cohort it ran on, using the thread's full width rather than the 660px text
- * column. The filter comes from the revision, so a chart can't drift to the selected cohort.
- */
-const ChartFrame: React.FC<ChartFrameProps> = ({ cohort, children }: ChartFrameProps) => {
+/** A chart and the cohort it ran on. The filter comes from the revision, so a chart can't drift to the selected cohort. */
+const ChartFrame: React.FC<ChartFrameProps> = ({ title, cohort, footer, children }: ChartFrameProps) => {
   const filter = useCohortFilterForRevision(cohort?.revision);
   const isRunning = useAuiState((s) => s.thread.isRunning);
 
   return (
     <div
       data-testid="chart-frame"
-      className="my-2 ml-[calc(50%-50cqw+1rem)] w-[calc(100cqw-2rem)] rounded border border-base-lighter bg-base-max"
+      className="my-3 overflow-hidden rounded-[10px] border border-base-lighter bg-base-max"
     >
-      {cohort?.label && (
-        <p className="border-b border-base-lighter px-2.5 py-1.5 font-content text-xs italic">
-          {cohortText(cohort)}
+      {(title || cohort?.label) && (
+        <p className="flex flex-wrap items-baseline gap-x-2 border-b border-base-lighter bg-base-lightest px-3 py-2 font-content text-[12.5px]">
+          {title && <b className="font-heading text-[13px] font-semibold text-gunmetal">{title}</b>}
+          {cohort?.label && <span>{cohortText(cohort)}</span>}
         </p>
       )}
-      <div className="overflow-x-auto p-2">
+      <div className="overflow-x-auto p-2.5">
         {filter ? (
           <ChartErrorBoundary>{children(filter)}</ChartErrorBoundary>
         ) : (
@@ -69,6 +72,7 @@ const ChartFrame: React.FC<ChartFrameProps> = ({ cohort, children }: ChartFrameP
           </p>
         )}
       </div>
+      {footer && <div className="border-t border-base-lighter bg-base-lightest px-3 py-2.5">{footer}</div>}
     </div>
   );
 };
