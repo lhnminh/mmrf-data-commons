@@ -17,28 +17,31 @@ const TOOL_DISPLAYS = {
 };
 const ASSISTANT_PARTS = { Text: MarkdownText, tools: TOOL_DISPLAYS };
 
-const COLUMN = 'mx-auto w-full max-w-[660px] px-4';
+const COLUMN = 'mx-auto w-full max-w-[1200px] px-5';
 const FOCUS_RING =
   'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary';
 
 const EmptyState: React.FC = () => (
-  <div className={`${COLUMN} mt-auto`}>
-    <h2 className="font-heading text-xl font-bold text-base-contrast-max">
+  <div className="mx-auto mb-7 mt-auto w-full max-w-[760px] px-5">
+    <h2 className="font-heading text-[34px] font-semibold leading-tight tracking-tight text-gunmetal">
       What do you want to find out?
     </h2>
-    <p className="mb-4 mt-1 font-content text-sm text-base-content-dark">
-      Ask what&apos;s mutated in a group of patients, or where a gene&apos;s
-      mutations fall on the protein.
+    <p className="mb-5 mt-2 font-content text-[15px] text-gunmetal">
+      Ask in plain language. Chat uses this cohort, opens the Virtual Lab&apos;s own charts and shows each step it ran.
     </p>
-    <div className="flex flex-col gap-2">
-      {SUGGESTED_PROMPTS.map((prompt) => (
+    <div className="divide-y divide-base-lighter border-y border-base-lighter">
+      {SUGGESTED_PROMPTS.map(({ prompt, label }) => (
         <ThreadPrimitive.Suggestion
           key={prompt}
           prompt={prompt}
           send
-          className={`rounded-md border border-base-lighter bg-base-max px-3 py-2 text-left font-content text-sm hover:border-secondary ${FOCUS_RING}`}
+          aria-label={prompt}
+          className={`flex w-full items-baseline justify-between gap-3 px-0.5 py-3 text-left font-content text-[15px] font-medium text-gunmetal hover:text-primary ${FOCUS_RING}`}
         >
-          {prompt}
+          <span>{prompt}</span>
+          <span aria-hidden="true" className="shrink-0 text-xs font-normal">
+            {label}
+          </span>
         </ThreadPrimitive.Suggestion>
       ))}
     </div>
@@ -46,11 +49,11 @@ const EmptyState: React.FC = () => (
 );
 
 const UserMessage: React.FC = () => (
-  <MessagePrimitive.Root className={`${COLUMN} mt-6 first:mt-0`}>
+  <MessagePrimitive.Root className={`${COLUMN} mt-10 first:mt-0`}>
     <div
       role="heading"
       aria-level={3}
-      className="whitespace-pre-wrap break-words font-heading text-base font-bold text-base-contrast-max"
+      className="whitespace-pre-wrap break-words font-heading text-2xl font-semibold tracking-tight text-gunmetal"
     >
       <MessagePrimitive.Parts />
     </div>
@@ -66,7 +69,7 @@ const RunError: React.FC = () => {
 
 const AssistantMessage: React.FC = () => (
   <MessagePrimitive.Root className={`${COLUMN} mt-2`}>
-    <div className="break-words border-l-[3px] border-primary pl-3 font-content text-sm">
+    <div className="break-words font-content text-[15px] text-gunmetal">
       <MessagePrimitive.Parts components={ASSISTANT_PARTS} />
       <MessagePrimitive.Error>
         <ErrorPrimitive.Root className="mt-1 text-utility-error">
@@ -77,23 +80,27 @@ const AssistantMessage: React.FC = () => (
   </MessagePrimitive.Root>
 );
 
+const SEND_BUTTON = `rounded-lg bg-primary px-3.5 py-1.5 font-heading text-[13px] font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60 ${FOCUS_RING}`;
+const STOP_BUTTON = `rounded-lg border border-primary bg-base-max px-3.5 py-1.5 font-heading text-[13px] font-semibold text-primary ${FOCUS_RING}`;
+
 const Composer: React.FC<{ readonly isEmpty: boolean }> = ({ isEmpty }) => (
   <ThreadPrimitive.ViewportFooter
-    className={`sticky bottom-0 bg-base-max pb-3 pt-3 ${isEmpty ? 'mb-auto' : 'mt-auto'}`}
+    className={`sticky bottom-0 bg-gradient-to-t from-base-max from-70% to-transparent pb-3.5 pt-3 ${isEmpty ? 'mb-auto' : 'mt-auto'}`}
   >
-    <div className={COLUMN}>
-      <ComposerPrimitive.Root className="flex items-end gap-2 rounded-md border border-secondary bg-base-max p-2 focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-primary">
+    <div className={isEmpty ? 'mx-auto w-full max-w-[760px] px-5' : COLUMN}>
+      <ComposerPrimitive.Root className="flex items-end gap-2 rounded-xl border border-base-lighter bg-base-max p-2 pl-3.5 shadow-[0_6px_22px_rgba(32,49,59,0.09)] focus-within:border-primary">
         <ComposerPrimitive.Input
           rows={1}
-          placeholder="Ask about the Virtual Lab"
+          placeholder={isEmpty ? 'Ask about the Virtual Lab' : 'Ask a follow-up'}
           aria-label="Ask about the Virtual Lab"
-          className="max-h-32 min-w-0 flex-1 resize-none border-0 bg-transparent p-1 font-content text-sm outline-none focus:ring-0"
+          className="max-h-32 min-w-0 flex-1 resize-none border-0 bg-transparent py-1 font-content text-[15px] outline-none focus:ring-0"
         />
-        <ComposerPrimitive.Send
-          className={`rounded bg-secondary px-3 py-1 font-content text-sm font-semibold text-white hover:bg-secondary-darker disabled:cursor-not-allowed disabled:opacity-60 ${FOCUS_RING}`}
-        >
-          Send
-        </ComposerPrimitive.Send>
+        <AuiIf condition={(s) => s.thread.isRunning}>
+          <ComposerPrimitive.Cancel className={STOP_BUTTON}>Stop</ComposerPrimitive.Cancel>
+        </AuiIf>
+        <AuiIf condition={(s) => !s.thread.isRunning}>
+          <ComposerPrimitive.Send className={SEND_BUTTON}>Send</ComposerPrimitive.Send>
+        </AuiIf>
       </ComposerPrimitive.Root>
     </div>
   </ThreadPrimitive.ViewportFooter>
@@ -108,8 +115,7 @@ const ChatThread: React.FC = () => {
       <ThreadPrimitive.Viewport
         turnAnchor="top"
         scrollToBottomOnInitialize={false}
-        // A size container, so a chart can take the thread's width from inside the text column.
-        className="flex flex-1 flex-col overflow-y-auto overflow-x-hidden pt-6 [container-type:inline-size]"
+        className="flex flex-1 flex-col overflow-y-auto overflow-x-hidden pt-8"
       >
         <AuiIf condition={(s) => s.thread.isEmpty}>
           <EmptyState />
