@@ -57,20 +57,23 @@ const ChatCohortStrip: React.FC = () => {
   const labels = cohortFilterLabels(filters);
 
   return (
-    <div className="relative flex min-h-[46px] flex-wrap items-center gap-x-3 gap-y-1 bg-base-lightest px-5 py-2 font-content text-sm text-gunmetal">
-      <span className="rounded-md border border-base-lighter bg-base-max px-2.5 py-1 font-heading text-xs font-semibold">
+    <div className="relative flex min-h-[46px] flex-wrap items-center gap-x-3 gap-y-1 bg-base-lightest px-5 py-2 font-content text-sm text-gunmetal md:flex-nowrap">
+      <span className="shrink-0 rounded-md border border-base-lighter bg-base-max px-2.5 py-1 font-heading text-xs font-semibold">
         {name}
       </span>
       {labels.length > 0 ? (
         <>
-          {labels.map((label) => (
-            <span key={label} className="rounded-full bg-seashell px-2.5 py-1 text-xs">
-              {label}
-            </span>
-          ))}
+          {/* One line on a wide screen, so the thread's height stays right. */}
+          <div className="flex min-w-0 flex-wrap gap-1.5 md:flex-nowrap md:overflow-x-auto">
+            {labels.map((label) => (
+              <span key={label} className="shrink-0 rounded-full bg-seashell px-2.5 py-1 text-xs">
+                {label}
+              </span>
+            ))}
+          </div>
           <button
             type="button"
-            className={TEXT_ACTION}
+            className={`shrink-0 ${TEXT_ACTION}`}
             onClick={() => dispatch(clearCohortFilters({ index: COHORT_FILTER_INDEX }))}
           >
             Clear All
@@ -79,11 +82,11 @@ const ChatCohortStrip: React.FC = () => {
       ) : (
         <span className="text-xs">All cases, no filters</span>
       )}
-      <Link href="/?app=CohortBuilder" className={TEXT_ACTION}>
+      <Link href="/?app=CohortBuilder" className={`shrink-0 ${TEXT_ACTION}`}>
         Cohort Builder
       </Link>
       {!failed && (
-        <span className="ml-auto flex items-baseline gap-1.5">
+        <span className="ml-auto flex shrink-0 items-baseline gap-1.5">
           <span className="font-heading text-lg font-semibold tabular-nums">
             {cases === undefined ? '—' : cases.toLocaleString('en-US')}
           </span>

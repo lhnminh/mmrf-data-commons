@@ -37,7 +37,24 @@ export const extractNumbers = (text: string): ReadonlyArray<NumberToken> =>
     end: match.index + match[0].length,
   }));
 
-/** The finished tool calls in a message that have a summary to link to. */
+interface TurnMessage {
+  readonly id: string;
+  readonly role: string;
+  readonly content: ReadonlyArray<unknown>;
+}
+
+/**
+ * Every part of a turn up to and including this message. The agent's stream gives a turn's tool
+ * calls and its answer different message IDs, so they can arrive as separate messages.
+ */
+export const turnParts = (messages: ReadonlyArray<TurnMessage>, messageId: string): ReadonlyArray<unknown> => {
+  const end = messages.findIndex((message) => message.id === messageId);
+  if (end < 0) return [];
+  const start = messages.slice(0, end).findLastIndex((message) => message.role === 'user') + 1;
+  return messages.slice(start, end + 1).flatMap((message) => message.content);
+};
+
+/** The finished tool calls among these parts that have a summary to link to. */
 export const toolSources = (parts: ReadonlyArray<unknown>): ReadonlyArray<ToolSource> =>
   parts.flatMap((part) => {
     const { type, toolCallId, toolName, result } = (part ?? {}) as Record<string, unknown>;

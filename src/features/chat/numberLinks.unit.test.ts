@@ -1,4 +1,4 @@
-import { extractNumbers, linkableSources, numberSources, toolSources } from './numberLinks';
+import { extractNumbers, linkableSources, numberSources, toolSources, turnParts } from './numberLinks';
 
 const values = (text: string) => extractNumbers(text).map((n) => n.value);
 
@@ -69,5 +69,32 @@ describe('linkableSources', () => {
     expect(linkableSources(parts, { type: 'running' }).size).toBe(0);
     expect(linkableSources(parts, undefined).size).toBe(0);
     expect(linkableSources(parts, { type: 'complete' }).size).toBe(1);
+  });
+});
+
+describe('turnParts', () => {
+  const user = (id: string) => ({ id, role: 'user', content: [{ type: 'text', text: 'q' }] });
+  const assistant = (id: string, ...content: object[]) => ({ id, role: 'assistant', content });
+  const a = { type: 'tool-call', toolCallId: 'a' };
+  const b = { type: 'tool-call', toolCallId: 'b' };
+  const answer = { type: 'text', text: '148' };
+
+  it('collects tool calls from earlier assistant messages in the same turn', () => {
+    const messages = [user('u1'), assistant('m1', a), assistant('m2', b), assistant('m3', answer)];
+    expect(turnParts(messages, 'm3')).toEqual([a, b, answer]);
+  });
+
+  it('stops at the question that started the turn', () => {
+    const messages = [user('u1'), assistant('m1', a), user('u2'), assistant('m2', b), assistant('m3', answer)];
+    expect(turnParts(messages, 'm3')).toEqual([b, answer]);
+  });
+
+  it('ignores later messages', () => {
+    const messages = [user('u1'), assistant('m1', answer), assistant('m2', a)];
+    expect(turnParts(messages, 'm1')).toEqual([answer]);
+  });
+
+  it('is empty for an unknown message', () => {
+    expect(turnParts([user('u1')], 'nope')).toEqual([]);
   });
 });

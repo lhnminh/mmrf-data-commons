@@ -4,7 +4,7 @@ import ReactMarkdown, { type Components } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { splitAnswerSections } from './answerSections';
 import { linkChildren } from './ChatEvidence';
-import { linkableSources, type NumberSources } from './numberLinks';
+import { linkableSources, turnParts, type NumberSources } from './numberLinks';
 
 const REMARK_PLUGINS = [remarkGfm];
 // Agent text shouldn't make the browser load remote images. Raw HTML is already not rendered.
@@ -34,9 +34,13 @@ const linkedComponents = (sources: NumberSources): Components | undefined => {
 
 /** Renders the agent's Markdown answers, with Observed, Limits and Interpretation labelled. */
 const MarkdownText: TextMessagePartComponent = ({ text }) => {
-  const parts = useAuiState((s) => s.message.parts);
+  const messages = useAuiState((s) => s.thread.messages);
+  const messageId = useAuiState((s) => s.message.id);
   const status = useAuiState((s) => s.message.status);
-  const components = useMemo(() => linkedComponents(linkableSources(parts, status)), [parts, status]);
+  const components = useMemo(
+    () => linkedComponents(linkableSources(turnParts(messages, messageId), status)),
+    [messages, messageId, status],
+  );
   const { preamble, sections } = splitAnswerSections(text);
 
   return (

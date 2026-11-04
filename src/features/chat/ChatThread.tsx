@@ -111,8 +111,8 @@ const ChatThread: React.FC = () => {
   const isEmpty = useAuiState((s) => s.thread.isEmpty);
 
   return (
-    // 120px is roughly Chat's slim frame above the thread, so the message box stays on screen.
-    <ThreadPrimitive.Root className="flex h-[calc(100vh-120px)] min-h-[480px] flex-col bg-base-max">
+    // 115px is Chat's slim frame above the thread, so the message box stays on screen.
+    <ThreadPrimitive.Root className="flex h-[calc(100vh-115px)] min-h-[480px] flex-col bg-base-max">
       <ChatEvidenceProvider>
         <ThreadPrimitive.Viewport
           turnAnchor="top"

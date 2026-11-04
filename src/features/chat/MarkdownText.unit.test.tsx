@@ -18,10 +18,11 @@ jest.mock('react-markdown', () => ({
 }));
 jest.mock('remark-gfm', () => ({ __esModule: true, default: () => undefined }));
 
-let mockMessage: { parts: unknown[]; status?: { type: string } } = { parts: [] };
+let mockMessage: { id: string; status?: { type: string } } = { id: 'answer' };
+let mockMessages: unknown[] = [];
 
 jest.mock('@assistant-ui/react', () => ({
-  useAuiState: (selector: (state: unknown) => unknown) => selector({ message: mockMessage }),
+  useAuiState: (selector: (state: unknown) => unknown) => selector({ message: mockMessage, thread: { messages: mockMessages } }),
 }));
 
 const MATRIX = {
@@ -36,18 +37,26 @@ const show = (text: string) =>
 
 describe('MarkdownText', () => {
   beforeEach(() => {
-    mockMessage = { parts: [] };
+    mockMessage = { id: 'answer' };
+    mockMessages = [];
   });
 
   it('links numbers in answer sections once the message finishes', () => {
-    mockMessage = { parts: [MATRIX], status: { type: 'complete' } };
+    // The runtime can put a turn's tool calls and its answer in separate messages.
+    mockMessage = { id: 'answer', status: { type: 'complete' } };
+    mockMessages = [
+      { id: 'q', role: 'user', content: [] },
+      { id: 'tools', role: 'assistant', content: [MATRIX] },
+      { id: 'answer', role: 'assistant', content: [] },
+    ];
     show('Plan for 287.\nObserved: 287 and 12.');
     expect(screen.getAllByRole('button')).toHaveLength(1);
     expect(screen.getByRole('button', { name: '287, from OncoMatrix' })).toBeTruthy();
   });
 
   it('links nothing while the message streams', () => {
-    mockMessage = { parts: [MATRIX], status: { type: 'running' } };
+    mockMessage = { id: 'answer', status: { type: 'running' } };
+    mockMessages = [{ id: 'answer', role: 'assistant', content: [MATRIX] }];
     show('Observed: 287.');
     expect(screen.queryByRole('button')).toBeNull();
   });
