@@ -4,7 +4,6 @@ import { bindProteinPaint } from "@sjcrh/proteinpaint-client";
 import { useIsDemoApp } from "@/hooks/useIsDemoApp";
 import {
   useCoreSelector,
-  FilterSet,
   //PROTEINPAINT_API,
   useFetchUserDetailsQuery,
   useCoreDispatch,
@@ -15,12 +14,16 @@ import { DemoText } from "@/components/tailwindComponents";
 import { selectCurrentCohortCaseFilters } from "@/core/utils";
 import { COHORT_FILTER_INDEX, PROTEINPAINT_API } from '@/core';
 import { updateFilters } from './updateFilters';
-import { SelectSamples, SelectSamplesCallback } from "./sjpp-types";
+import { getCorrelationTrack, Mds3Arg } from "./correlationArg";
 
 const basepath = PROTEINPAINT_API;
 
 interface PpProps {
   basepath?: string;
+  /** Draws this cohort instead of the selected one. */
+  filter0Override?: object;
+  /** Opens these plots straight away, instead of the Correlation Input panel. */
+  plots?: ReadonlyArray<object>;
 }
 
 export const CorrelationWrapper: FC<PpProps> = (props: PpProps) => {
@@ -28,7 +31,7 @@ export const CorrelationWrapper: FC<PpProps> = (props: PpProps) => {
   const currentCohort = useCoreSelector((state) =>
     selectCurrentCohortCaseFilters(state, COHORT_FILTER_INDEX),
   );
-  const filter0 = isDemoMode ? null : buildCohortGqlOperator(currentCohort);
+  const filter0 = props.filter0Override ?? (isDemoMode ? null : buildCohortGqlOperator(currentCohort));
   const userDetails = useFetchUserDetailsQuery()
 
   // to track reusable instance for mds3 skewer track
@@ -60,7 +63,7 @@ export const CorrelationWrapper: FC<PpProps> = (props: PpProps) => {
   useDeepCompareEffect(
     () => {
       const rootElem = divRef.current;
-      const data = getCorrelationTrack(props, updateFilters, filter0);
+      const data = getCorrelationTrack(props.basepath || (basepath as string), updateFilters, filter0, props.plots);
       if (!data) return;
       /*if (isDemoMode) {
         data.geneSymbol = props.hardcodeCnvOnly
@@ -97,7 +100,7 @@ export const CorrelationWrapper: FC<PpProps> = (props: PpProps) => {
       });
     },
 
-    [ isDemoMode, filter0, userDetails.currentData ],
+    [ isDemoMode, filter0, props.plots, userDetails.currentData ],
   );
 
   const divRef = useRef<HTMLDivElement>(null);
@@ -120,67 +123,3 @@ export const CorrelationWrapper: FC<PpProps> = (props: PpProps) => {
     </div>
   );
 };
-
-interface Mds3Arg {
-  dslabel?: string;
-  genome?: string;
-  holder?: HTMLElement;
-  noheader?: boolean;
-  nobox?: boolean;
-  hide_dsHandles?: boolean;
-  host: string;
-  filter0?: FilterSet;
-  launchGdcCorrelation?: boolean;
-  opts: CorrelationArgOpts;
-}
-
-interface CorrelationArgOpts {
-  barchart: {
-    allow2selectSamples: SelectSamples
-  },
-  violin: {
-    allow2selectSamples: SelectSamples
-  },
-  boxplot: {
-    allow2selectSamples: SelectSamples
-  }
-}
-
-function getCorrelationTrack(
-  props: PpProps,
-  callback: SelectSamplesCallback,
-  filter0: any
-) {
-  const allow2selectSamples = {
-    buttonText: "Create cohort",
-    attributes: [{
-      from: "sample",
-      to: "cases.case_id",
-      convert: true
-    }],
-    callback
-  }
-
-  const arg: Mds3Arg = {
-    dslabel: 'MMRF',
-    genome: 'hg38',
-    // host in gdc is just a relative url path,
-    // using the same domain as the GDC portal where PP is embedded
-    host: props.basepath || (basepath as string),
-    launchGdcCorrelation: true,
-    filter0,
-    opts: {
-      barchart: {
-				allow2selectSamples
-			},
-			violin: {
-				allow2selectSamples
-			},
-			boxplot: {
-				allow2selectSamples
-			}
-    }
-  };
-
-  return arg;
-}

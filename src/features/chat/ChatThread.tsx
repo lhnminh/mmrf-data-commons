@@ -1,19 +1,21 @@
 import React from 'react';
-import ToolResult from './ToolResult';
 import {
   AuiIf,
   ComposerPrimitive,
+  ErrorPrimitive,
   MessagePrimitive,
   ThreadPrimitive,
   useAuiState,
-  type ToolCallMessagePartProps,
 } from '@assistant-ui/react';
+import { chatErrorMessage } from './chatError';
+import { SUGGESTED_PROMPTS } from './suggestedPrompts';
+import ToolCallFallback from './tools/ToolCallRow';
+import MarkdownText from './MarkdownText';
 
-const SUGGESTED_PROMPTS = [
-  'What is a cohort in the Virtual Lab?',
-  'What does a correlation plot show?',
-  'How should I interpret a p-value?',
-];
+const TOOL_DISPLAYS = {
+  Fallback: ToolCallFallback,
+};
+const ASSISTANT_PARTS = { Text: MarkdownText, tools: TOOL_DISPLAYS };
 
 const COLUMN = 'mx-auto w-full max-w-[660px] px-4';
 const FOCUS_RING =
@@ -25,7 +27,8 @@ const EmptyState: React.FC = () => (
       What do you want to find out?
     </h2>
     <p className="mb-4 mt-1 font-content text-sm text-base-content-dark">
-      Ask about research concepts and how to use the Virtual Lab.
+      Ask what&apos;s mutated in a group of patients, or where a gene&apos;s
+      mutations fall on the protein.
     </p>
     <div className="flex flex-col gap-2">
       {SUGGESTED_PROMPTS.map((prompt) => (
@@ -54,10 +57,22 @@ const UserMessage: React.FC = () => (
   </MessagePrimitive.Root>
 );
 
+const RunError: React.FC = () => {
+  const error = useAuiState((s) =>
+    s.message.status?.type === 'incomplete' ? s.message.status.error : undefined,
+  );
+  return <ErrorPrimitive.Message>{chatErrorMessage(error)}</ErrorPrimitive.Message>;
+};
+
 const AssistantMessage: React.FC = () => (
   <MessagePrimitive.Root className={`${COLUMN} mt-2`}>
     <div className="break-words border-l-[3px] border-primary pl-3 font-content text-sm">
-      <MessagePrimitive.Parts components={{ tools: { Fallback: ToolResult as React.ComponentType<ToolCallMessagePartProps> } }} />
+      <MessagePrimitive.Parts components={ASSISTANT_PARTS} />
+      <MessagePrimitive.Error>
+        <ErrorPrimitive.Root className="mt-1 text-utility-error">
+          <RunError />
+        </ErrorPrimitive.Root>
+      </MessagePrimitive.Error>
     </div>
   </MessagePrimitive.Root>
 );
@@ -70,8 +85,8 @@ const Composer: React.FC<{ readonly isEmpty: boolean }> = ({ isEmpty }) => (
       <ComposerPrimitive.Root className="flex items-end gap-2 rounded-md border border-secondary bg-base-max p-2 focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-primary">
         <ComposerPrimitive.Input
           rows={1}
-          placeholder="Ask about your cohort"
-          aria-label="Ask about your cohort"
+          placeholder="Ask about the Virtual Lab"
+          aria-label="Ask about the Virtual Lab"
           className="max-h-32 min-w-0 flex-1 resize-none border-0 bg-transparent p-1 font-content text-sm outline-none focus:ring-0"
         />
         <ComposerPrimitive.Send
@@ -80,9 +95,6 @@ const Composer: React.FC<{ readonly isEmpty: boolean }> = ({ isEmpty }) => (
           Send
         </ComposerPrimitive.Send>
       </ComposerPrimitive.Root>
-      <p className="mt-1.5 font-content text-xs text-base-content-dark">
-          Analyses use synthetic demonstration data. Review a cohort before saving it.
-      </p>
     </div>
   </ThreadPrimitive.ViewportFooter>
 );
@@ -93,7 +105,12 @@ const ChatThread: React.FC = () => {
   return (
     // 460px is roughly the page chrome above the tool area, so the message box stays on screen.
     <ThreadPrimitive.Root className="flex h-[calc(100vh-460px)] min-h-[480px] flex-col bg-base-max">
-      <ThreadPrimitive.Viewport className="flex flex-1 flex-col overflow-y-auto overflow-x-hidden pt-6">
+      <ThreadPrimitive.Viewport
+        turnAnchor="top"
+        scrollToBottomOnInitialize={false}
+        // A size container, so a chart can take the thread's width from inside the text column.
+        className="flex flex-1 flex-col overflow-y-auto overflow-x-hidden pt-6 [container-type:inline-size]"
+      >
         <AuiIf condition={(s) => s.thread.isEmpty}>
           <EmptyState />
         </AuiIf>

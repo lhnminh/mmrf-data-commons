@@ -41,7 +41,10 @@ const basepath = PROTEINPAINT_API;
 interface PpProps {
   chartType: "matrix" | "hierCluster";
   basepath?: string;
-  filterOverride?: Record<string, unknown> | null;
+  /** Draws on this filter instead of the selected cohort, so the chart keeps its own. */
+  filter0Override?: object;
+  /** How many genes to show. Defaults to 50. */
+  maxGenes?: number;
 }
 
 // export const demoFilter = Object.freeze({
@@ -57,7 +60,7 @@ export const MatrixWrapper: FC<PpProps> = (props: PpProps) => {
   const currentCohort = useCoreSelector((state) =>
     selectCurrentCohortCaseFilters(state, COHORT_FILTER_INDEX),
   );
-  const filter0 = props.filterOverride ?? (isDemoMode ? null : buildCohortGqlOperator(currentCohort));
+  const filter0 = props.filter0Override ?? (isDemoMode ? null : buildCohortGqlOperator(currentCohort));
   const userDetails = useFetchUserDetailsQuery();
   const prevData = useRef<any>(undefined);
   const toolApp = useRef<any>(undefined);
@@ -341,7 +344,7 @@ function getMatrixTrack(
     launchGdcHierCluster: props.chartType == "hierCluster",
     settings: {
       matrix: {
-        maxGenes: 50
+        maxGenes: props.maxGenes ?? 50
       }
     },
     opts: {

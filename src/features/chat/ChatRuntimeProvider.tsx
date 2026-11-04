@@ -1,9 +1,13 @@
-import React from 'react';
-import { AssistantRuntimeProvider, useLocalRuntime } from '@assistant-ui/react';
-import { convertFilterSetToGqlFilter, useCoreSelector } from '@gen3/core';
-import { COHORT_FILTER_INDEX } from '@/core';
-import { selectCurrentCohortCaseFilters } from '@/core/utils';
-import { createAgentAdapter } from './agentAdapter';
+import React, { useMemo } from 'react';
+import { AssistantRuntimeProvider, AuiConfig, Tools } from '@assistant-ui/react';
+import { useAgUiRuntime } from '@assistant-ui/react-ag-ui';
+import { HttpAgent } from '@ag-ui/client';
+import { toolkit } from './toolkit';
+import { CohortProvider } from './useCohortSync';
+
+export const AGENT_ROUTE = '/api/agent/agui';
+
+const TOOLS_CONFIG = AuiConfig({ tools: Tools({ toolkit }) });
 
 interface ChatRuntimeProviderProps {
   readonly children: React.ReactNode;
@@ -12,13 +16,12 @@ interface ChatRuntimeProviderProps {
 const ChatRuntimeProvider: React.FC<ChatRuntimeProviderProps> = ({
   children,
 }: ChatRuntimeProviderProps) => {
-  const cohort = useCoreSelector((state) => selectCurrentCohortCaseFilters(state, COHORT_FILTER_INDEX));
-  const cohortFilter = convertFilterSetToGqlFilter(cohort) ?? null;
-  const runtime = useLocalRuntime(createAgentAdapter(() => cohortFilter));
+  const agent = useMemo(() => new HttpAgent({ url: AGENT_ROUTE }), []);
+  const runtime = useAgUiRuntime({ agent });
 
   return (
-    <AssistantRuntimeProvider runtime={runtime}>
-      {children}
+    <AssistantRuntimeProvider runtime={runtime} config={TOOLS_CONFIG}>
+      <CohortProvider agent={agent}>{children}</CohortProvider>
     </AssistantRuntimeProvider>
   );
 };
