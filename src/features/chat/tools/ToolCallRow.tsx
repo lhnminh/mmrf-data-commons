@@ -1,5 +1,5 @@
 import React from 'react';
-import type { ToolCallMessagePartComponent } from '@assistant-ui/react';
+import { ThreadPrimitive, type ToolCallMessagePartComponent } from '@assistant-ui/react';
 
 export type ToolStatus = 'Running' | 'Done' | 'Failed';
 
@@ -53,6 +53,28 @@ export const displayToolName = (toolName: string) => {
 
 export const CHAT_BUTTON =
   'rounded border border-secondary px-2 py-0.5 font-content text-xs font-semibold hover:bg-base-lightest disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary';
+
+interface ToolSuggestionProps {
+  readonly prompt: string;
+  readonly disabled?: boolean;
+  readonly children: React.ReactNode;
+}
+
+/**
+ * A button in a tool's output that sends a follow-up message. Inside a message the composer
+ * is that message's edit composer, which isn't open, so clearing it after sending throws.
+ */
+export const ToolSuggestion: React.FC<ToolSuggestionProps> = ({ prompt, disabled, children }) => (
+  <ThreadPrimitive.Suggestion
+    prompt={prompt}
+    send
+    clearComposer={false}
+    disabled={disabled}
+    className={CHAT_BUTTON}
+  >
+    {children}
+  </ThreadPrimitive.Suggestion>
+);
 
 const settingEntries = (settings: unknown): ReadonlyArray<[string, string]> =>
   settings !== null && typeof settings === 'object'

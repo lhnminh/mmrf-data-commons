@@ -1,8 +1,8 @@
 import React from 'react';
-import { ThreadPrimitive, useAuiState, type ToolCallMessagePartComponent } from '@assistant-ui/react';
+import { useAuiState, type ToolCallMessagePartComponent } from '@assistant-ui/react';
 import { useCohortUndo } from '../useCohortSync';
 import type { CohortChange } from '../cohortSync';
-import { CHAT_BUTTON as BUTTON, parseResult, toolMessage, toolStatus, ToolRow } from './ToolCallRow';
+import { CHAT_BUTTON as BUTTON, parseResult, toolMessage, toolStatus, ToolRow, ToolSuggestion } from './ToolCallRow';
 
 const TITLE = 'Cohort Builder';
 
@@ -69,14 +69,9 @@ const AmbiguousCohort: React.FC<{ readonly result: CohortResult; readonly settin
   <ToolRow title={`${TITLE} · Which one?`} status="Done" message={result.summary} settings={settings}>
     <div className="mt-1 flex flex-wrap gap-2">
       {(result.options ?? []).map((option) => (
-        <ThreadPrimitive.Suggestion
-          key={option}
-          prompt={`Use ${option} for ${result.label ?? 'that filter'}.`}
-          send
-          className={BUTTON}
-        >
+        <ToolSuggestion key={option} prompt={`Use ${option} for ${result.label ?? 'that filter'}.`}>
           {option}
-        </ThreadPrimitive.Suggestion>
+        </ToolSuggestion>
       ))}
     </div>
   </ToolRow>

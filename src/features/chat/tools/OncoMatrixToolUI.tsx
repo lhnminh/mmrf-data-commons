@@ -1,8 +1,8 @@
 import React from 'react';
 import dynamic from 'next/dynamic';
-import { ThreadPrimitive, useAuiState, type ToolCallMessagePartComponent } from '@assistant-ui/react';
+import { useAuiState, type ToolCallMessagePartComponent } from '@assistant-ui/react';
 import ChartFrame, { ChartLoading, type ChartCohort } from './ChartFrame';
-import { CHAT_BUTTON, parseResult, toolMessage, toolStatus, ToolRow } from './ToolCallRow';
+import { parseResult, toolMessage, toolStatus, ToolRow, ToolSuggestion } from './ToolCallRow';
 
 const TITLE = 'OncoMatrix';
 const MAX_FOLLOW_UPS = 3;
@@ -25,15 +25,9 @@ const FollowUps: React.FC<{ readonly genes: ReadonlyArray<{ readonly gene: strin
   return (
     <div className="mt-2 flex flex-wrap gap-2">
       {genes.slice(0, MAX_FOLLOW_UPS).map(({ gene }) => (
-        <ThreadPrimitive.Suggestion
-          key={gene}
-          prompt={`Show the Lollipop plot for ${gene}.`}
-          send
-          disabled={isRunning}
-          className={CHAT_BUTTON}
-        >
+        <ToolSuggestion key={gene} prompt={`Show the Lollipop plot for ${gene}.`} disabled={isRunning}>
           Lollipop for {gene}
-        </ThreadPrimitive.Suggestion>
+        </ToolSuggestion>
       ))}
     </div>
   );

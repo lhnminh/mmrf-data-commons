@@ -1,6 +1,32 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import { displayToolName, ToolRow, toolFailure, toolMessage, toolStatus } from './ToolCallRow';
+import { displayToolName, ToolRow, toolFailure, toolMessage, toolStatus, ToolSuggestion } from './ToolCallRow';
+
+const mockSuggestion = jest.fn();
+
+jest.mock('@assistant-ui/react', () => ({
+  ThreadPrimitive: {
+    Suggestion: (props: { readonly children: React.ReactNode }) => {
+      mockSuggestion(props);
+      return <button type="button">{props.children}</button>;
+    },
+  },
+}));
+
+describe('ToolSuggestion', () => {
+  it('sends without clearing the composer, which a message part cannot reach', () => {
+    render(<ToolSuggestion prompt="Show the Lollipop plot for KRAS.">Lollipop for KRAS</ToolSuggestion>);
+
+    expect(screen.getByRole('button', { name: 'Lollipop for KRAS' })).toBeInTheDocument();
+    expect(mockSuggestion).toHaveBeenCalledWith(
+      expect.objectContaining({
+        prompt: 'Show the Lollipop plot for KRAS.',
+        send: true,
+        clearComposer: false,
+      }),
+    );
+  });
+});
 
 describe('displayToolName', () => {
   it('removes the Gateway target prefix', () => {
