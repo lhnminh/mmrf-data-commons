@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { modals } from '@mantine/modals';
 import type { ToolCallMessagePartProps } from '@assistant-ui/react';
 import type { FilterSet } from '@gen3/core';
@@ -6,6 +6,7 @@ import type { SurvivalPlotData } from '@/core/features/survival/types';
 import { COHORT_FILTER_INDEX } from '@/core';
 import SurvivalPlot from '@/features/charts/SurvivalPlot/SurvivalPlot';
 import { SurvivalPlotTypes } from '@/features/charts/SurvivalPlot/types';
+import { MatrixWrapper } from '@/features/proteinpaint/MatrixWrapper';
 
 interface CohortProposal { name: string; caseIds: string[] }
 interface GeneCount { gene: string; count: number }
@@ -17,6 +18,7 @@ interface Plot {
   overallStats?: Record<string, number>;
   genes?: (GeneCount | ExpressionGene)[];
   cohort?: CohortProposal;
+  filter?: Record<string, unknown>;
   groups?: CohortProposal[];
   volcanoPng?: string;
 }
@@ -33,6 +35,20 @@ function saveCohort(cohort: CohortProposal) {
     innerProps: { initialName: cohort.name, filters: { [COHORT_FILTER_INDEX]: filter }, setAsCurrentCohort: true },
   });
 }
+
+const OncoMatrixResult: React.FC<{ filter: Record<string, unknown> }> = ({ filter }) => {
+  const [open, setOpen] = useState(false);
+  return <div className="mt-3">
+    <button type="button" onClick={() => setOpen(value => !value)}
+      aria-expanded={open} className="font-semibold text-primary underline">
+      {open ? 'Close' : 'Open'} interactive OncoMatrix
+    </button>
+    {open && <div>
+      <p className="my-2 text-sm">Click a gene label in the matrix, then Lollipop to inspect its variants.</p>
+      <div className="overflow-x-auto"><MatrixWrapper chartType="matrix" filterOverride={filter} /></div>
+    </div>}
+  </div>;
+};
 
 const ToolResult: React.FC<ToolCallMessagePartProps> = ({ toolName, result, isError }) => {
   const value = result as { summary?: string; plot?: Plot } | undefined;
@@ -52,6 +68,7 @@ const ToolResult: React.FC<ToolCallMessagePartProps> = ({ toolName, result, isEr
           <div className="h-4 bg-primary" style={{ width: `${Math.max(2, gene.count / Math.max(...(plot.genes as GeneCount[]).map(g => g.count)) * 60)}%` }} />
           <span>{gene.count}</span>
         </div>)}
+      {plot.filter && <OncoMatrixResult filter={plot.filter} />}
     </div>}
     {plot.type === 'differential_expression' && <div>
       <h3 className="font-semibold">Differential expression</h3>
