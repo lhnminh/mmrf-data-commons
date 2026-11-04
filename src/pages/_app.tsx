@@ -36,6 +36,7 @@ import MaintenanceNotice from "@/components/MaintenanceNotice";
 import GoogleAnalyticsLoader from "@/components/GoogleAnalyticsLoader";
 import { isAnalyticsAllowed } from "@/lib/analytics";
 import MainNavigation from "@/components/Navigation/MainNavigation/MainNavigation";
+import { isChatPage } from "@/features/chat/isChatPage";
 import {
   acceptCookieConsent,
   dismissCookieConsentForSession,
@@ -67,7 +68,8 @@ const Gen3App = ({
   const router = useRouter();
   const gaMeasurementId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
   const syntheticSandbox = process.env.NEXT_PUBLIC_SYNTHETIC_SANDBOX === '1';
-  const hideMainNavigation = router.pathname === "/Login";
+  const isChat = isChatPage(router.pathname, router.query.app);
+  const hideMainNavigation = router.pathname === "/Login" || isChat;
 
   useEffect(() => {
     if (isFirstRender.current) {
@@ -125,7 +127,7 @@ const Gen3App = ({
             >
               <Gen3GDCCompatabilityProvider>
                 {syntheticSandbox && (
-                  <div role="note" className="bg-amber-100 p-3 text-center text-sm text-amber-950">
+                  <div role="note" className={`bg-amber-100 text-center text-amber-950 ${isChat ? "p-1 text-xs" : "p-3 text-sm"}`}>
                     Synthetic sandbox — all data is fabricated and has no clinical meaning.
                   </div>
                 )}

@@ -27,6 +27,9 @@ import { useDeepCompareEffect } from 'use-deep-compare';
 import { getCustomCohortButtons } from '@/features/cohort/getCustomCohortButtons';
 import { useProjectId } from '@/hooks/useAppFilters';
 import { formatGeneSymbol } from '@/utils/formatQueryExpressionValues';
+import ChatCohortStrip from '@/features/chat/ChatCohortStrip';
+import ChatHeader from '@/features/chat/ChatHeader';
+import { isChatPage } from '@/features/chat/isChatPage';
 
 const PROD_HOSTNAME = 'virtuallab.themmrf.org';
 // Hold back these cards in production; keep dev and direct URL access available.
@@ -139,7 +142,12 @@ const Tools = ({
       <PageTitle pageName={pageName} />
       <ProtectedContent>
         <div className="flex flex-col">
-          {!projectId ? (
+          {isChatPage(router.pathname, app) ? (
+            <>
+              <ChatHeader />
+              <ChatCohortStrip />
+            </>
+          ) : !projectId ? (
             <>
               <CohortManager
                 rightPanel={

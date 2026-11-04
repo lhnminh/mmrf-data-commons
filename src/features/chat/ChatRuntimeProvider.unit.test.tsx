@@ -100,6 +100,55 @@ describe('Chat over AG-UI', () => {
     global.fetch = originalFetch;
   });
 
+  it('offers Stop instead of Send while a run is active', async () => {
+    const encoder = new TextEncoder();
+    let controller!: ReadableStreamDefaultController<Uint8Array>;
+    const body = new ReadableStream<Uint8Array>({
+      start(c) {
+        controller = c;
+      },
+    });
+    global.fetch = jest.fn().mockResolvedValue(
+      new Response(body, { status: 200, headers: { 'content-type': 'text/event-stream' } }),
+    );
+    const send = (event: object) => controller.enqueue(encoder.encode(`data: ${JSON.stringify(event)}\n\n`));
+
+    renderChat();
+    expect(screen.getByRole('button', { name: 'Send' })).toBeTruthy();
+    await userEvent.click(screen.getByRole('button', { name: 'Is the Virtual Lab healthy?' }));
+
+    const stop = await screen.findByRole('button', { name: 'Stop' });
+    expect((stop as HTMLButtonElement).disabled).toBe(false);
+    expect(screen.queryByRole('button', { name: 'Send' })).toBeNull();
+
+    send({ type: 'RUN_STARTED', threadId: 't', runId: 'r' });
+    send({ type: 'RUN_FINISHED', threadId: 't', runId: 'r' });
+    controller.close();
+    expect(await screen.findByRole('button', { name: 'Send' })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Stop' })).toBeNull();
+  });
+
+  // Chat clips the page on a wide screen, so a thread taller than the window would hide the message box.
+  it('lets the thread shrink to fit a short, wide window', () => {
+    renderChat();
+    const thread = screen.getByRole('textbox', { name: 'Ask about the Virtual Lab' }).closest('.min-h-\\[480px\\]');
+    expect(thread?.className).toContain('md:min-h-0');
+  });
+
+  it('asks for a follow-up after the first message', async () => {
+    global.fetch = jest.fn().mockResolvedValue(sseResponse(SUCCESSFUL_RUN));
+
+    renderChat();
+    const box = screen.getByRole('textbox', { name: 'Ask about the Virtual Lab' }) as HTMLTextAreaElement;
+    expect(box.placeholder).toBe('Ask about the Virtual Lab');
+    await userEvent.click(screen.getByRole('button', { name: 'Is the Virtual Lab healthy?' }));
+
+    await screen.findByText(/1000 synthetic cases/);
+    expect((screen.getByRole('textbox', { name: 'Ask about the Virtual Lab' }) as HTMLTextAreaElement).placeholder).toBe(
+      'Ask a follow-up',
+    );
+  });
+
   it('streams an answer and a tool row from the agent route', async () => {
     const fetchMock = jest.fn().mockResolvedValue(sseResponse(SUCCESSFUL_RUN));
     global.fetch = fetchMock;

@@ -1,6 +1,16 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import { displayToolName, ToolRow, toolFailure, toolMessage, toolStatus, ToolSuggestion } from './ToolCallRow';
+import userEvent from '@testing-library/user-event';
+import { ChatEvidenceProvider, evidenceElementId, linkChildren } from '../ChatEvidence';
+import {
+  displayToolName,
+  ToolRow,
+  toolFailure,
+  toolMessage,
+  toolStatus,
+  ToolSuggestion,
+  type ToolStatus,
+} from './ToolCallRow';
 
 const mockSuggestion = jest.fn();
 
@@ -105,6 +115,20 @@ describe('ToolRow details', () => {
     expect(details(container)?.textContent).toContain('[{"a":1}]');
   });
 
+  it('names the settings Inputs', () => {
+    const { container } = render(<ToolRow title="Step" status="Done" settings={{ gene: 'KRAS' }} />);
+    expect(container.querySelector('summary')?.textContent).toBe('Inputs');
+  });
+
+  it.each<[ToolStatus, boolean]>([
+    ['Running', true],
+    ['Done', false],
+    ['Failed', true],
+  ])('shows the %s status as text, visibly: %s', (status, visible) => {
+    render(<ToolRow title="Step" status={status} />);
+    expect(screen.getByText(status).classList.contains('sr-only')).toBe(!visible);
+  });
+
   it('has nothing to expand without settings', () => {
     const { container } = render(<ToolRow title="Step" status="Done" settings={{}} message="Fine." />);
     expect(details(container)).toBeNull();
@@ -131,5 +155,21 @@ describe('ToolRow details', () => {
     const { container } = render(<ToolRow title="Step" status="Failed" message="Timed out" />);
     expect(details(container)?.open).toBe(true);
     expect(screen.getByText('Timed out')).toBeTruthy();
+  });
+});
+
+describe('ToolRow evidence', () => {
+  it('stands out while a number from this step is under the pointer', async () => {
+    const source = { toolCallId: 'a', title: 'OncoMatrix', summary: '148 samples' };
+    const { container } = render(
+      <ChatEvidenceProvider>
+        <ToolRow title="Step" status="Done" toolCallId="a" />
+        <p>{linkChildren('148', new Map([['148', [source]]]))}</p>
+      </ChatEvidenceProvider>,
+    );
+    const step = container.querySelector(`#${evidenceElementId('a')}`);
+    expect(step?.classList.contains('bg-seashell')).toBe(false);
+    await userEvent.hover(screen.getByRole('button', { name: '148, from OncoMatrix' }));
+    expect(step?.classList.contains('bg-seashell')).toBe(true);
   });
 });

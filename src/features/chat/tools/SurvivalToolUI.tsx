@@ -32,7 +32,7 @@ export const survivalPlots = ({ term, compareBy }: SurvivalPlot): ReadonlyArray<
   },
 ];
 
-const SurvivalToolUI: ToolCallMessagePartComponent = ({ args, result, isError, status }) => {
+const SurvivalToolUI: ToolCallMessagePartComponent = ({ toolCallId, args, result, isError, status }) => {
   const rowStatus = toolStatus(isError, result, status);
   const parsed = (rowStatus === 'Done' ? parseResult(result) : undefined) as SurvivalResult | undefined;
   const title = parsed?.comparedBy ? `${TITLE} · ${parsed.comparedBy}` : TITLE;
@@ -40,13 +40,19 @@ const SurvivalToolUI: ToolCallMessagePartComponent = ({ args, result, isError, s
 
   if (!plot) {
     return (
-      <ToolRow title={title} status={rowStatus} settings={args} message={toolMessage(isError, result, status)} />
+      <ToolRow
+        toolCallId={toolCallId}
+        title={title}
+        status={rowStatus}
+        settings={args}
+        message={toolMessage(isError, result, status)}
+      />
     );
   }
   return (
     <>
-      <ToolRow title={title} status={rowStatus} settings={args} />
-      <ChartFrame cohort={parsed.cohort}>
+      <ToolRow toolCallId={toolCallId} title={title} status={rowStatus} settings={args} />
+      <ChartFrame toolCallId={toolCallId} title={title} cohort={parsed.cohort}>
         {(filter) => <CorrelationWrapper filter0Override={filter} plots={survivalPlots(plot)} />}
       </ChartFrame>
     </>
