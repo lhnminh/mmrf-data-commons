@@ -7,6 +7,7 @@ import { COHORT_FILTER_INDEX } from '@/core';
 import SurvivalPlot from '@/features/charts/SurvivalPlot/SurvivalPlot';
 import { SurvivalPlotTypes } from '@/features/charts/SurvivalPlot/types';
 import { MatrixWrapper } from '@/features/proteinpaint/MatrixWrapper';
+import { ProteinPaintWrapper } from '@/features/proteinpaint/ProteinPaintWrapper';
 
 interface CohortProposal { name: string; caseIds: string[] }
 interface GeneCount { gene: string; count: number }
@@ -18,7 +19,8 @@ interface Plot {
   overallStats?: Record<string, number>;
   genes?: (GeneCount | ExpressionGene)[];
   cohort?: CohortProposal;
-  filter?: Record<string, unknown>;
+  filter?: Record<string, unknown> | null;
+  gene?: string;
   groups?: CohortProposal[];
   volcanoPng?: string;
 }
@@ -50,6 +52,17 @@ const OncoMatrixResult: React.FC<{ filter: Record<string, unknown> }> = ({ filte
   </div>;
 };
 
+const LollipopResult: React.FC<{ gene: string; filter?: Record<string, unknown> | null }> = ({ gene, filter }) => {
+  const [open, setOpen] = useState(false);
+  return <div>
+    <button type="button" onClick={() => setOpen(value => !value)}
+      aria-expanded={open} className="font-semibold text-primary underline">
+      {open ? 'Close' : 'Open'} {gene} Lollipop plot
+    </button>
+    {open && <div className="overflow-x-auto"><ProteinPaintWrapper gene={gene} filterOverride={filter} /></div>}
+  </div>;
+};
+
 const ToolResult: React.FC<ToolCallMessagePartProps> = ({ toolName, result, isError }) => {
   const value = result as { summary?: string; plot?: Plot } | undefined;
   const plot = value?.plot;
@@ -70,6 +83,7 @@ const ToolResult: React.FC<ToolCallMessagePartProps> = ({ toolName, result, isEr
         </div>)}
       {plot.filter && <OncoMatrixResult filter={plot.filter} />}
     </div>}
+    {plot.type === 'lollipop' && plot.gene && <LollipopResult gene={plot.gene} filter={plot.filter} />}
     {plot.type === 'differential_expression' && <div>
       <h3 className="font-semibold">Differential expression</h3>
       {plot.volcanoPng && <img alt="Volcano plot of differential expression" className="max-w-full" src={plot.volcanoPng.startsWith('data:') ? plot.volcanoPng : `data:image/png;base64,${plot.volcanoPng}`} />}
