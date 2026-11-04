@@ -1,4 +1,4 @@
-import type { ChatModelAdapter } from '@assistant-ui/react';
+import type { ChatModelAdapter, ToolCallMessagePartProps } from '@assistant-ui/react';
 
 type TextTurn = { role: 'user' | 'assistant'; content: string };
 
@@ -10,7 +10,10 @@ function textFromMessage(message: { content: readonly { type: string; text?: str
     .trim();
 }
 
-export const agentAdapter = {
+type ToolCall = { name: string; input: Record<string, unknown>; status: string; result?: { summary: string; plot?: unknown }; error?: string };
+
+export function createAgentAdapter(getCohortFilter: () => unknown = () => null) {
+return {
   async run({ messages, abortSignal }) {
     const turns: TextTurn[] = messages
       .filter((message) => message.role === 'user' || message.role === 'assistant')
@@ -28,7 +31,8 @@ export const agentAdapter = {
       const response = await fetch('/agent/v1/prompts', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ prompt: latest.content, history: turns.slice(0, -1).slice(-10) }),
+        body: JSON.stringify({ prompt: latest.content, history: turns.slice(0, -1).slice(-10),
+          context: { cohortFilter: getCohortFilter() } }),
         signal: abortSignal,
       });
       if (!response.ok) throw new Error(`Agent returned HTTP ${response.status}`);
@@ -37,10 +41,26 @@ export const agentAdapter = {
           !('message' in result) || typeof result.message !== 'string' || !result.message.trim()) {
         throw new Error('Agent returned an empty response');
       }
-      return { content: [{ type: 'text' as const, text: result.message }] };
+      const calls = 'toolCalls' in result && Array.isArray(result.toolCalls)
+        ? result.toolCalls as ToolCall[] : [];
+      return { content: [
+        { type: 'text' as const, text: result.message },
+        ...calls.map((call, index) => ({
+          type: 'tool-call' as const,
+          toolCallId: `${index}-${call.name}`,
+          toolName: call.name,
+          args: call.input as ToolCallMessagePartProps['args'],
+          argsText: JSON.stringify(call.input),
+          result: call.result,
+          isError: call.status === 'error',
+        })),
+      ] };
     } catch (error) {
       if (abortSignal.aborted) throw error;
       return { content: [{ type: 'text' as const, text: 'The research agent is unavailable. Please try again.' }] };
     }
   },
 } satisfies ChatModelAdapter;
+}
+
+export const agentAdapter = createAgentAdapter();

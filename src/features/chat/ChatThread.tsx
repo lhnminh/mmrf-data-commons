@@ -1,10 +1,12 @@
 import React from 'react';
+import ToolResult from './ToolResult';
 import {
   AuiIf,
   ComposerPrimitive,
   MessagePrimitive,
   ThreadPrimitive,
   useAuiState,
+  type ToolCallMessagePartProps,
 } from '@assistant-ui/react';
 
 const SUGGESTED_PROMPTS = [
@@ -55,7 +57,7 @@ const UserMessage: React.FC = () => (
 const AssistantMessage: React.FC = () => (
   <MessagePrimitive.Root className={`${COLUMN} mt-2`}>
     <div className="break-words border-l-[3px] border-primary pl-3 font-content text-sm">
-      <MessagePrimitive.Parts />
+      <MessagePrimitive.Parts components={{ tools: { Fallback: ToolResult as React.ComponentType<ToolCallMessagePartProps> } }} />
     </div>
   </MessagePrimitive.Root>
 );
@@ -79,7 +81,7 @@ const Composer: React.FC<{ readonly isEmpty: boolean }> = ({ isEmpty }) => (
         </ComposerPrimitive.Send>
       </ComposerPrimitive.Root>
       <p className="mt-1.5 font-content text-xs text-base-content-dark">
-          The agent cannot inspect your cohort or run analyses yet.
+          Analyses use synthetic demonstration data. Review a cohort before saving it.
       </p>
     </div>
   </ThreadPrimitive.ViewportFooter>
