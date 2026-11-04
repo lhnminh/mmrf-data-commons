@@ -25,6 +25,7 @@ const TOOL_TITLES: Record<string, string> = {
   show_oncomatrix: 'OncoMatrix',
   show_lollipop: 'ProteinPaint',
   show_survival: 'Correlation Plot',
+  show_gene_clustering: 'Gene Expression Clustering',
 };
 
 export const extractNumbers = (text: string): ReadonlyArray<NumberToken> =>
