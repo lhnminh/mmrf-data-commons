@@ -76,5 +76,12 @@ export default [
       '@typescript-eslint/no-require-imports': 'off',
     },
   },
+  {
+    files: ['test/**/*.mjs', 'scripts/**/*.mjs'],
+    languageOptions: {
+      sourceType: 'module',
+      globals: globals.node,
+    },
+  },
   ...storybook.configs["flat/recommended"]
 ];
