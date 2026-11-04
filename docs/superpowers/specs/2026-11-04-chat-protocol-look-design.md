@@ -54,7 +54,7 @@ Changes made by Clear All reach the agent through the existing "changed outside 
 
 ### Thread height
 
-`ThreadPrimitive.Root` fills the remaining viewport height, replacing `h-[calc(100vh-460px)]`. The page footer stays below the fold.
+`ThreadPrimitive.Root` fills the remaining viewport height, replacing `h-[calc(100vh-460px)]`. On screens 768px and wider, Chat clips the page to the window, because a page that could scroll moved the cohort strip off screen. The page footer isn't reachable from Chat there, and the strip stays on one line with its tags scrolling sideways.
 
 ## Thread
 
@@ -107,13 +107,13 @@ A new pure module, `src/features/chat/numberLinks.ts`:
 
 - `extractNumbers(text)` returns numeric tokens, normalised so `1,000` equals `1000`.
 - It skips digits that touch letters or sit in identifiers, such as `p.G12V`, `c.238+2T>C` and `SYNTH-CASE-0001`. Decimals and scientific notation like `7.1e-60` count as one token, and a P-value isn't split.
-- `linkSources(answerText, tools)` takes the message's tool results and returns, for each number, the `toolCallId`s whose `summary` contains it.
+- `numberSources(tools)` takes a turn's tool results and returns, for each number, the tools whose `summary` contains it. The agent's stream gives a turn's tool calls and its answer different message IDs, so sources come from every message since the last question.
 
 ### Rendering
 
 `MarkdownText` reads the message's tool parts with `useAuiState`, then overrides the `react-markdown` text elements (`p`, `li`, `strong`, `em`, `td`, `th`) to wrap each matched number in a button. Code and links aren't overridden, so they stay as they are. Numbers with no source remain plain text, so a link always means the number was found in a tool summary.
 
-Links apply only to answer sections, not the plan line. They're added once the message finishes, so the text doesn't reflow during streaming.
+Links apply to answer sections, or to the whole text when it has no labels, but not to text before labelled sections. A plan line has no sources, because it comes before the turn's tool calls. They're added once the message finishes, so the text doesn't reflow during streaming.
 
 ### Highlighting
 
@@ -134,7 +134,7 @@ This is the only feature not yet tried on real agent output. It's built last and
 
 - Visible keyboard focus on every control. Number links are real buttons with an accessible name such as "334, from Cohort Builder".
 - Pulsing and scrolling animations respect `prefers-reduced-motion`.
-- Below 860px the answer label column stacks above its body, and the strip wraps.
+- Below 768px the answer label column stacks above its body, and the strip wraps.
 
 ## Testing
 
@@ -155,7 +155,7 @@ Manual, once the agent is back: run the demo script in a browser at 1440×900, i
 | The sandbox's UI scripts rely on the Chat page's chrome | Checked: `scripts/ui-*.mjs` don't open Chat. Their banner check is unaffected because the text is unchanged |
 | ProteinPaint needs more width than the column | Checked with live charts, and the column widens |
 | The agent's text doesn't follow the section format | Renders as ordinary Markdown |
-| Number links mislead on a coincidental match, such as a 6 in another summary | Links are scoped to tool results in the same message and described as "found in", not as proof |
+| Number links mislead on a coincidental match, such as a 6 in another summary | Links are scoped to tool results in the same turn and described as "found in", not as proof |
 | Hiding `CohortManager` removes something Chat depends on | `CohortProvider` reads the core store directly. Confirmed by running the cohort flow |
 
 ## Build order
