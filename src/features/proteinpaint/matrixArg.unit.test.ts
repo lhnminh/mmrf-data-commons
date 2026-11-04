@@ -28,6 +28,19 @@ describe('getMatrixTrack', () => {
     expect(getMatrixTrack({ chartType: 'matrix', maxGenes: 3 }, '/pp').settings.matrix).toEqual({ maxGenes: 3 });
   });
 
+  it('passes a gene list through', () => {
+    const arg = getMatrixTrack({ chartType: 'hierCluster', genes: ['DUSP4'], generateTopGenes: true }, '/pp');
+
+    expect(arg.genes).toEqual(['DUSP4']);
+    expect(arg.opts.geneset).toEqual({ showEditUI: false });
+    expect(arg.settings).not.toHaveProperty('hierCluster');
+  });
+
+  it('leaves genes out without a list', () => {
+    expect(getMatrixTrack({ chartType: 'hierCluster' }, '/pp')).not.toHaveProperty('genes');
+    expect(getMatrixTrack({ chartType: 'matrix' }, '/pp')).not.toHaveProperty('genes');
+  });
+
   it('prefers the chart own basepath', () => {
     expect(getMatrixTrack({ chartType: 'matrix', basepath: '/own' }, '/pp').host).toBe('/own');
     expect(getMatrixTrack({ chartType: 'matrix' }, '/pp').host).toBe('/pp');

@@ -12,21 +12,28 @@ const MatrixWrapper = dynamic(
   { ssr: false, loading: () => <ChartLoading /> },
 );
 
+interface ClusteringPlot {
+  readonly maxGenes?: number;
+  readonly genes?: ReadonlyArray<string>;
+}
+
 interface ClusteringResult {
   readonly cohort?: ChartCohort;
-  readonly plot?: { readonly maxGenes: number };
+  readonly geneSet?: { readonly id: string };
+  readonly plot?: ClusteringPlot;
 }
 
 const GeneClusteringToolUI: ToolCallMessagePartComponent = ({ toolCallId, args, result, isError, status }) => {
   const rowStatus = toolStatus(isError, result, status);
   const parsed = (rowStatus === 'Done' ? parseResult(result) : undefined) as ClusteringResult | undefined;
   const plot = parsed?.plot;
+  const title = parsed?.geneSet ? `${TITLE} · ${parsed.geneSet.id}` : TITLE;
 
   if (!plot) {
     return (
       <ToolRow
         toolCallId={toolCallId}
-        title={TITLE}
+        title={title}
         status={rowStatus}
         settings={args}
         message={toolMessage(isError, result, status)}
@@ -35,10 +42,15 @@ const GeneClusteringToolUI: ToolCallMessagePartComponent = ({ toolCallId, args, 
   }
   return (
     <>
-      <ToolRow toolCallId={toolCallId} title={TITLE} status={rowStatus} settings={args} />
-      <ChartFrame toolCallId={toolCallId} title={TITLE} cohort={parsed.cohort}>
+      <ToolRow toolCallId={toolCallId} title={title} status={rowStatus} settings={args} />
+      <ChartFrame toolCallId={toolCallId} title={title} cohort={parsed.cohort}>
         {(filter) => (
-          <MatrixWrapper chartType="hierCluster" filter0Override={filter} maxGenes={plot.maxGenes} generateTopGenes />
+          <MatrixWrapper
+            chartType="hierCluster"
+            filter0Override={filter}
+            generateTopGenes
+            {...(plot.genes ? { genes: plot.genes } : { maxGenes: plot.maxGenes })}
+          />
         )}
       </ChartFrame>
     </>

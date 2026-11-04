@@ -7,13 +7,15 @@ export interface MatrixProps {
   filter0Override?: object;
   /** How many genes to show. Defaults to 50 for OncoMatrix and to 1000 for clustering. */
   maxGenes?: number;
-  /** Clustering only: skips the start screen and draws the top genes straight away. */
+  /** Clustering only: skips the start screen and draws straight away, from `genes` or the top genes. */
   generateTopGenes?: boolean;
+  /** Clustering only: the genes to draw, instead of the top variably expressed genes. */
+  genes?: ReadonlyArray<string>;
 }
 
 export interface MatrixArg {
   dslabel?: string,
-  genes?: string[],
+  genes?: ReadonlyArray<string>,
   holder?: HTMLElement;
   noheader?: boolean;
   nobox?: boolean;
@@ -103,6 +105,8 @@ export function getMatrixTrack(
       },
     },
   };
+
+  if (props.genes) arg.genes = props.genes;
 
   if (props.chartType == "hierCluster") {
     arg.opts.geneset = {

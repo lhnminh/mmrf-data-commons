@@ -56,6 +56,22 @@ describe('GeneClusteringToolUI', () => {
     expect(screen.getAllByText('Gene Expression Clustering').length).toBeGreaterThan(0);
   });
 
+  it('draws a named set and titles it', () => {
+    show({
+      ...RESULT,
+      geneSet: { id: 'MEK_UP.V1_UP', geneCount: 2 },
+      plot: { type: 'gene_clustering', genes: ['A', 'B'] },
+    });
+
+    expect(mockChart).toHaveBeenCalledWith({
+      chartType: 'hierCluster',
+      filter0Override: { and: [] },
+      genes: ['A', 'B'],
+      generateTopGenes: true,
+    });
+    expect(screen.getAllByText('Gene Expression Clustering · MEK_UP.V1_UP').length).toBeGreaterThan(0);
+  });
+
   it('shows only the tool row without a plot', () => {
     show({ status: 'too_few_samples', summary: 'Ranking genes needs at least 10 samples.' });
 
