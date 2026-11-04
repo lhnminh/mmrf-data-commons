@@ -7,6 +7,7 @@ import {
   ThreadPrimitive,
   useAuiState,
 } from '@assistant-ui/react';
+import { chatErrorMessage } from './chatError';
 import { SUGGESTED_PROMPTS } from './suggestedPrompts';
 import ToolCallFallback from './tools/ToolCallRow';
 import MarkdownText from './MarkdownText';
@@ -56,13 +57,20 @@ const UserMessage: React.FC = () => (
   </MessagePrimitive.Root>
 );
 
+const RunError: React.FC = () => {
+  const error = useAuiState((s) =>
+    s.message.status?.type === 'incomplete' ? s.message.status.error : undefined,
+  );
+  return <ErrorPrimitive.Message>{chatErrorMessage(error)}</ErrorPrimitive.Message>;
+};
+
 const AssistantMessage: React.FC = () => (
   <MessagePrimitive.Root className={`${COLUMN} mt-2`}>
     <div className="break-words border-l-[3px] border-primary pl-3 font-content text-sm">
       <MessagePrimitive.Parts components={ASSISTANT_PARTS} />
       <MessagePrimitive.Error>
         <ErrorPrimitive.Root className="mt-1 text-utility-error">
-          <ErrorPrimitive.Message />
+          <RunError />
         </ErrorPrimitive.Root>
       </MessagePrimitive.Error>
     </div>

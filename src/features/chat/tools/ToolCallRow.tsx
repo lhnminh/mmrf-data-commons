@@ -3,8 +3,24 @@ import type { ToolCallMessagePartComponent } from '@assistant-ui/react';
 
 export type ToolStatus = 'Running' | 'Done' | 'Failed';
 
+const parseResult = (result: unknown): unknown => {
+  if (typeof result !== 'string') return result;
+  try {
+    return JSON.parse(result);
+  } catch {
+    return result;
+  }
+};
+
+/** Tools return { ok: false, summary } for a failure they can explain, rather than raising. */
+export const toolFailure = (result: unknown): string | undefined => {
+  const parsed = parseResult(result) as { ok?: unknown; summary?: unknown } | null | undefined;
+  if (parsed === null || typeof parsed !== 'object' || parsed.ok !== false) return undefined;
+  return typeof parsed.summary === 'string' ? parsed.summary : 'The tool reported a failure.';
+};
+
 export const toolStatus = (isError?: boolean, result?: unknown): ToolStatus => {
-  if (isError) return 'Failed';
+  if (isError || toolFailure(result)) return 'Failed';
   return result === undefined ? 'Running' : 'Done';
 };
 
@@ -53,7 +69,7 @@ const ToolCallFallback: ToolCallMessagePartComponent = ({
   <ToolRow
     title={displayToolName(toolName)}
     status={toolStatus(isError, result)}
-    message={isError ? toolError(result) : undefined}
+    message={isError ? toolError(result) : toolFailure(result)}
   />
 );
 

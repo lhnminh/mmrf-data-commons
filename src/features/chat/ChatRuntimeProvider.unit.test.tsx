@@ -38,6 +38,13 @@ const FAILED_RUN = [
   { type: 'RUN_ERROR', code: 'AGENT_ERROR', message: 'The agent could not finish this run.' },
 ];
 
+const failedToolRun = () =>
+  SUCCESSFUL_RUN.map((event) =>
+    event.type === 'TOOL_CALL_RESULT'
+      ? { ...event, content: '{"ok":false,"error":"auth_failed","summary":"The Virtual Lab refused the login."}' }
+      : event,
+  );
+
 const sseResponse = (events: ReadonlyArray<object>) => {
   const encoder = new TextEncoder();
   const body = new ReadableStream<Uint8Array>({
@@ -96,6 +103,43 @@ describe('Chat over AG-UI', () => {
     expect(AGENT_ROUTE).toBe('/api/agent/agui');
     expect(fetchMock.mock.calls[0][0]).toBe('/api/agent/agui');
     expect(JSON.parse(fetchMock.mock.calls[0][1].body).messages.at(-1).role).toBe('user');
+  });
+
+  it('marks a finished tool as done', async () => {
+    global.fetch = jest.fn().mockResolvedValue(sseResponse(SUCCESSFUL_RUN));
+
+    renderChat();
+    await userEvent.click(screen.getByRole('button', { name: 'Is the Virtual Lab healthy?' }));
+
+    expect(await screen.findByText('Done')).toBeTruthy();
+    expect(screen.queryByText('Failed')).toBeNull();
+  });
+
+  it('marks a tool that reports a failure as failed, with its reason', async () => {
+    global.fetch = jest.fn().mockResolvedValue(sseResponse(failedToolRun()));
+
+    renderChat();
+    await userEvent.click(screen.getByRole('button', { name: 'Is the Virtual Lab healthy?' }));
+
+    expect(await screen.findByText('Failed')).toBeTruthy();
+    expect(screen.getByText('The Virtual Lab refused the login.')).toBeTruthy();
+    expect(screen.queryByText('Done')).toBeNull();
+  });
+
+  it.each([
+    ['an error status', () => Promise.resolve(new Response('{"error":"The agent is unavailable"}', { status: 502 }))],
+    ['a network failure', () => Promise.reject(new TypeError('Failed to fetch'))],
+  ])('shows a plain message when the agent cannot be reached: %s', async (_name, respond) => {
+    global.fetch = jest.fn().mockImplementationOnce(respond).mockResolvedValueOnce(sseResponse(SUCCESSFUL_RUN));
+
+    renderChat();
+    await userEvent.click(screen.getByRole('button', { name: 'Is the Virtual Lab healthy?' }));
+
+    expect(await screen.findByText('The research agent is unavailable. Please try again.')).toBeTruthy();
+    expect(screen.queryByText(/HTTP 502|Failed to fetch/)).toBeNull();
+
+    await userEvent.type(screen.getByRole('textbox', { name: 'Ask about the Virtual Lab' }), 'Again{Enter}');
+    await waitFor(() => expect(screen.getByText(/1000 synthetic cases/)).toBeTruthy());
   });
 
   it('shows a failed run and lets the user send again', async () => {
