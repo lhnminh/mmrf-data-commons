@@ -2,6 +2,8 @@
 // Local forwarders to a deployed Virtual Lab, so `next dev` can use its data.
 //   :3090 -> <origin>                  (NEXT_PUBLIC_GEN3_API_TARGET)
 //   :3091 -> <origin>/protein-paint    (PROTEINPAINT_API)
+// Next's rewrite proxy sends the target's Host (changeOrigin), so only 127.0.0.1:<port> and
+// localhost:<port> are accepted; anything else gets 403.
 // Both add HTTP Basic auth, drop incoming cookies, and listen on 127.0.0.1 only.
 // Reads SANDBOX_ACCESS_FILE (JSON: origin, username, password). Never prints the contents.
 import fs from 'node:fs';
@@ -21,7 +23,14 @@ const makeServer = (target, authorization, log) => {
   const base = new URL(target);
   const client = base.protocol === 'https:' ? https : http;
   const basePath = base.pathname.replace(/\/$/, '');
-  return http.createServer((req, res) => {
+  const server = http.createServer((req, res) => {
+    // Only the local dev server may use this: a web page or a rebinding domain sends another Host.
+    const { port } = server.address();
+    if (![`127.0.0.1:${port}`, `localhost:${port}`].includes(req.headers.host)) {
+      res.writeHead(403, { 'content-type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Host not allowed' }));
+      return;
+    }
     const headers = { ...req.headers, authorization, host: base.host };
     delete headers.cookie;
     HOP_BY_HOP.forEach((h) => delete headers[h]);
@@ -42,6 +51,7 @@ const makeServer = (target, authorization, log) => {
     res.on('close', () => upstream.destroy());
     req.pipe(upstream);
   });
+  return server;
 };
 
 export const startForwarders = async ({

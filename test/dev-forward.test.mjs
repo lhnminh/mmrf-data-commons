@@ -186,3 +186,18 @@ test('never logs the password', async (t) => {
   assert.ok(!output.includes(PASSWORD));
   assert.ok(!output.includes(Buffer.from(`${USERNAME}:${PASSWORD}`).toString('base64')));
 });
+
+test('rejects a Host that is not this loopback listener', async (t) => {
+  const { seen, forwarders } = await setup(t);
+  for (const host of ['evil.example', 'rebind.example:' + forwarders.port, '127.0.0.1:1', 'localhost']) {
+    const res = await request(forwarders.port, { headers: { host } });
+    assert.equal(res.status, 403, host);
+  }
+  assert.equal(seen.length, 0);
+  assert.equal((await request(forwarders.port, { headers: { host: `localhost:${forwarders.port}` } })).status, 200);
+  assert.equal((await request(forwarders.proteinPaintPort)).status, 200);
+  assert.equal(
+    (await request(forwarders.proteinPaintPort, { headers: { host: `localhost:${forwarders.port}` } })).status,
+    403,
+  );
+});
