@@ -41,6 +41,7 @@ const basepath = PROTEINPAINT_API;
 interface PpProps {
   chartType: "matrix" | "hierCluster";
   basepath?: string;
+  filterOverride?: Record<string, unknown> | null;
 }
 
 // export const demoFilter = Object.freeze({
@@ -56,7 +57,7 @@ export const MatrixWrapper: FC<PpProps> = (props: PpProps) => {
   const currentCohort = useCoreSelector((state) =>
     selectCurrentCohortCaseFilters(state, COHORT_FILTER_INDEX),
   );
-  const filter0 = isDemoMode ? null : buildCohortGqlOperator(currentCohort);
+  const filter0 = props.filterOverride ?? (isDemoMode ? null : buildCohortGqlOperator(currentCohort));
   const userDetails = useFetchUserDetailsQuery();
   const prevData = useRef<any>(undefined);
   const toolApp = useRef<any>(undefined);
