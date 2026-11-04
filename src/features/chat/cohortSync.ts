@@ -52,8 +52,31 @@ export const changeActions = (changes: ReadonlyArray<CohortChange>, index: strin
 const isCaseIdField = (field: string) =>
   field === CASE_ID_FIELD || field.endsWith(`.${CASE_ID_FIELD}`);
 
+/** Labels the platform's title-casing gets wrong. They match the agent's field catalog. */
+const ACRONYM_LABELS: Record<string, string> = {
+  'cgs risk category': 'CGS Risk Category',
+  'cgs risk criteria': 'CGS Risk Criteria',
+  'iss stage': 'ISS Stage',
+  'bmi at diagnosis': 'BMI at Diagnosis',
+  'mm bone lesion femur': 'MM Bone Lesion Femur',
+  'mm bone lesion pelvis': 'MM Bone Lesion Pelvis',
+  'mm bone lesion ribs': 'MM Bone Lesion Ribs',
+  'mm bone lesion skull': 'MM Bone Lesion Skull',
+  'mm bone lesion spine': 'MM Bone Lesion Spine',
+  'censor os': 'Censor OS',
+  'censor pfs': 'Censor PFS',
+  'survival time os': 'Survival Time OS',
+  'survival time pfs': 'Survival Time PFS',
+  'project id': 'Project ID',
+};
+
+const fieldLabel = (field: string) => {
+  const label = trimFirstfieldNameToLabel(field, true);
+  return ACRONYM_LABELS[label.toLowerCase()] ?? label;
+};
+
 const describeOperation = (field: string, operation: Operation) => {
-  const name = trimFirstfieldNameToLabel(field, true);
+  const name = fieldLabel(field);
   const { operands } = operation as { operands?: unknown };
   const plain =
     Array.isArray(operands) && operands.every((value) => ['string', 'number'].includes(typeof value));

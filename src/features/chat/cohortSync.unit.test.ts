@@ -108,6 +108,18 @@ describe('cohortLabel', () => {
     );
   });
 
+  it('writes acronym fields as the agent does', () => {
+    const op = (field: string) => ({ operator: 'in' as const, field, operands: ['I'] });
+    expect(
+      cohortLabel(
+        set({
+          'diagnoses.iss_stage': op('diagnoses.iss_stage'),
+          'cgs_risk_key_criteria.cgs_risk_category': op('cgs_risk_key_criteria.cgs_risk_category'),
+        }),
+      ),
+    ).toBe('ISS Stage: I; CGS Risk Category: I');
+  });
+
   it('never lists case IDs', () => {
     const label = cohortLabel(
       set({ case_id: { operator: 'in', field: 'case_id', operands: ['SYNTH-1'] }, 'demographic.gender': genderOp }),
