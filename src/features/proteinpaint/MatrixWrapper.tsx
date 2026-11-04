@@ -23,9 +23,7 @@ import { DEMO_COHORT_FILTERS } from "./constants";
 import { DemoText } from "@/components/tailwindComponents";
 import { LoadingOverlay } from "@mantine/core";
 import {
-  SelectSamples,
   SelectSamplesCallBackArg,
-  SelectSamplesCallback,
   RxComponentCallbacks,
 } from "./sjpp-types";
 //import { SaveCohortModal } from "@gff/portal-components";
@@ -35,17 +33,9 @@ import { isEqual, cloneDeep } from "lodash";
 //import { INVALID_COHORT_NAMES } from "../cohortBuilder/utils";
 import { COHORT_FILTER_INDEX, PROTEINPAINT_API } from '@/core';
 import { updateFilters } from './updateFilters';
+import { getMatrixTrack, MatrixProps as PpProps } from './matrixArg';
 
 const basepath = PROTEINPAINT_API;
-
-interface PpProps {
-  chartType: "matrix" | "hierCluster";
-  basepath?: string;
-  /** Draws on this filter instead of the selected cohort, so the chart keeps its own. */
-  filter0Override?: object;
-  /** How many genes to show. Defaults to 50. */
-  maxGenes?: number;
-}
 
 // export const demoFilter = Object.freeze({
 //   op: "in",
@@ -159,6 +149,7 @@ export const MatrixWrapper: FC<PpProps> = (props: PpProps) => {
   // };
   const initArgs = getMatrixTrack(
     props,
+    basepath as string,
     updateFilters,
     matrixCallbacks,
     appCallbacks,
@@ -286,101 +277,3 @@ export const MatrixWrapper: FC<PpProps> = (props: PpProps) => {
     </div>
   );
 };
-
-interface MatrixArg {
-  dslabel?: string,
-  genes?: string[],
-  holder?: HTMLElement;
-  noheader?: boolean;
-  nobox?: boolean;
-  hide_dsHandles?: boolean;
-  host: string;
-  launchGdcMatrix: boolean;
-  launchGdcHierCluster: boolean;
-  filter0?: any; //FilterSet;
-  opts: MatrixArgOpts;
-  state?: any;
-  settings: {
-    [key: string]: any
-  }
-}
-
-interface MatrixArgOpts {
-  app: MatrixArgOptsApp;
-  matrix?: MatrixArgOptsMatrix;
-  hierCluster?: MatrixArgOptsMatrix;
-  geneset?: { showEditUI?: boolean }
-}
-
-interface MatrixArgOptsApp {
-  callbacks?: RxComponentCallbacks;
-}
-
-interface MatrixArgOptsMatrix {
-  allow2selectSamples?: SelectSamples;
-  callbacks?: RxComponentCallbacks;
-  customInputs?: {
-    geneset?: {
-      label: string;
-      showInput: () => void;
-    }[];
-  };
-}
-
-function getMatrixTrack(
-  props: PpProps,
-  callback?: SelectSamplesCallback,
-  matrixCallbacks?: RxComponentCallbacks,
-  appCallbacks?: RxComponentCallbacks,
-  //genesetCallback?: () => void,
-): MatrixArg {
-  const arg: MatrixArg = {
-    dslabel: 'MMRF',
-    // genes: ['MYC', 'MYCN', 'NSD2', 'KRAS'],
-    // host in gdc is just a relative url path,
-    // using the same domain as the GDC portal where PP is embedded
-    host: props.basepath || (basepath as string),
-    launchGdcMatrix: props.chartType == "matrix",
-    launchGdcHierCluster: props.chartType == "hierCluster",
-    settings: {
-      matrix: {
-        maxGenes: props.maxGenes ?? 50
-      }
-    },
-    opts: {
-      app: {
-        callbacks: appCallbacks,
-      },
-      [props.chartType]: {
-        allow2selectSamples: {
-          buttonText: "Create cohort",
-          attributes: [
-            {
-              from: "sample",
-              to: "cases.case_id",
-              convert: true,
-            },
-          ],
-          callback,
-        },
-        callbacks: matrixCallbacks,
-        // customInputs: {
-        //   geneset: [
-        //     {
-        //       label: "Load Gene Sets",
-        //       showInput: genesetCallback,
-        //     },
-        //   ],
-        // },
-      },
-    },
-  };
-
-  if (props.chartType == "hierCluster") {
-    arg.opts.geneset = {
-      showEditUI: true, // show geneset edit UI to allow gene selection prior to clustering
-    }
-  }
-
-  return arg;
-}
