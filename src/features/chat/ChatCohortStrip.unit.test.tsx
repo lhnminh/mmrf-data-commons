@@ -14,8 +14,8 @@ jest.mock('@gen3/core', () => ({
 }));
 
 const counts = (cases?: number, total?: number) =>
-  mockCounts.mockImplementation(({ queryId }: { queryId: string }) => ({
-    currentData: queryId === 'chat-total' ? total : cases,
+  mockCounts.mockImplementation(({ queryId }: { queryId?: string }) => ({
+    currentData: queryId === undefined ? total : cases,
   }));
 
 const addRace = () =>
@@ -66,6 +66,32 @@ describe('ChatCohortStrip', () => {
     show();
     await userEvent.click(screen.getByRole('button', { name: 'Clear All' }));
     expect(selectSelectedCohortFilterSet(coreStore.getState()).root).toEqual({});
+  });
+
+  // The platform saves a query's count onto the cohort with that ID, and crashes if there isn't one.
+  it('asks for the total without naming a cohort', () => {
+    counts(1000, 1000);
+    show();
+    const queryIds = mockCounts.mock.calls.map(([args]) => args.queryId);
+    expect(queryIds).toContain(undefined);
+    const cohortIds = Object.keys(coreStore.getState().cohorts.cohortManager.entities);
+    queryIds.filter(Boolean).forEach((id) => expect(cohortIds).toContain(id));
+  });
+
+  // A failed query can come back as a count of 0, and the Virtual Lab always has cases.
+  it('treats a total of 0 as a failed count', () => {
+    counts(0, 0);
+    show();
+    expect(screen.queryByText('0')).toBeNull();
+    expect(screen.queryByText(/cases$/)).toBeNull();
+    expect(screen.queryByRole('img')).toBeNull();
+  });
+
+  it('shows a real cohort of 0 cases', () => {
+    counts(0, 1000);
+    show();
+    expect(screen.getByText('0')).toBeTruthy();
+    expect(screen.getByRole('img', { name: '0 of 1,000 cases' })).toBeTruthy();
   });
 
   it('links to Cohort Builder', () => {

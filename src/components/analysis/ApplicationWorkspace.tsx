@@ -63,14 +63,17 @@ const ApplicationWorkspace: React.FC<AnalysisWorkspaceProps> = ({
             <DashboardDownloadContext.Provider
               value={{ state: chartDownloadState, dispatch }}
             >
-              <AnalysisBreadcrumbs
-                onDemoApp={isDemoMode}
-                skipSelectionScreen={skipSelectionScreen}
-                rightComponent={
-                  appInfo?.rightComponent && <appInfo.rightComponent />
-                }
-                appInfo={appInfo}
-              />
+              {/* Chat has its own slim header. */}
+              {app !== 'Chat' && (
+                <AnalysisBreadcrumbs
+                  onDemoApp={isDemoMode}
+                  skipSelectionScreen={skipSelectionScreen}
+                  rightComponent={
+                    appInfo?.rightComponent && <appInfo.rightComponent />
+                  }
+                  appInfo={appInfo}
+                />
+              )}
               <ActiveAnalysisTool appId={app} />
             </DashboardDownloadContext.Provider>
           </SelectionScreenContext.Provider>

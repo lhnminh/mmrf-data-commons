@@ -41,7 +41,8 @@ const ChatCohortStrip: React.FC = () => {
   const filters = useCoreSelector((state: CoreState) => selectSelectedCohortFilterSet(state));
 
   const casesQuery = useGetCountsQuery({ ...COUNT_QUERY, filters, queryId });
-  const totalQuery = useGetCountsQuery({ ...COUNT_QUERY, filters: NO_FILTERS, queryId: 'chat-total' });
+  // No queryId: the platform would save this count onto a cohort with that ID.
+  const totalQuery = useGetCountsQuery({ ...COUNT_QUERY, filters: NO_FILTERS });
 
   // A new query has no data until it answers, so hold the last count rather than flicker.
   const lastCases = useRef<number | undefined>(undefined);
@@ -49,7 +50,7 @@ const ChatCohortStrip: React.FC = () => {
   lastCases.current = casesQuery.currentData ?? lastCases.current;
   lastTotal.current = totalQuery.currentData ?? lastTotal.current;
 
-  const failed = casesQuery.isError || totalQuery.isError;
+  const failed = casesQuery.isError || totalQuery.isError || totalQuery.currentData === 0;
   const cases = failed ? undefined : lastCases.current;
   const total = failed ? undefined : lastTotal.current;
   const share = cohortShare(cases, total);
