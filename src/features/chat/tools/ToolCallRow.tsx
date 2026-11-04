@@ -3,7 +3,10 @@ import type { ToolCallMessagePartComponent } from '@assistant-ui/react';
 
 export type ToolStatus = 'Running' | 'Done' | 'Failed';
 
-const parseResult = (result: unknown): unknown => {
+type PartStatus = { readonly type: string; readonly reason?: string };
+
+/** The runtime can hand a result over as JSON text or as the parsed object. */
+export const parseResult = (result: unknown): unknown => {
   if (typeof result !== 'string') return result;
   try {
     return JSON.parse(result);
@@ -12,20 +15,35 @@ const parseResult = (result: unknown): unknown => {
   }
 };
 
-/** Tools return { ok: false, summary } for a failure they can explain, rather than raising. */
+const resultFields = (result: unknown) => {
+  const parsed = parseResult(result);
+  return parsed !== null && typeof parsed === 'object'
+    ? (parsed as { status?: unknown; summary?: unknown; error?: unknown })
+    : {};
+};
+
+const textOf = (value: unknown) => (typeof value === 'string' ? value : undefined);
+
+/** Tools return { status: "error", summary } for a failure they can explain. Other statuses are outcomes. */
 export const toolFailure = (result: unknown): string | undefined => {
-  const parsed = parseResult(result) as { ok?: unknown; summary?: unknown } | null | undefined;
-  if (parsed === null || typeof parsed !== 'object' || parsed.ok !== false) return undefined;
-  return typeof parsed.summary === 'string' ? parsed.summary : 'The tool reported a failure.';
+  const { status, summary } = resultFields(result);
+  if (status !== 'error') return undefined;
+  return textOf(summary) ?? 'The tool reported a failure.';
 };
 
-export const toolStatus = (isError?: boolean, result?: unknown): ToolStatus => {
+export const toolStatus = (isError?: boolean, result?: unknown, part?: PartStatus): ToolStatus => {
   if (isError || toolFailure(result)) return 'Failed';
-  return result === undefined ? 'Running' : 'Done';
+  if (result !== undefined) return 'Done';
+  return part?.type === 'incomplete' ? 'Failed' : 'Running';
 };
 
-export const toolError = (result: unknown) =>
-  (result as { error?: string } | undefined)?.error;
+/** What to say under a tool's row: why it failed, or its summary. */
+export const toolMessage = (isError?: boolean, result?: unknown, part?: PartStatus) => {
+  const { summary, error } = resultFields(result);
+  if (isError) return textOf(error) ?? textOf(summary);
+  if (result === undefined) return part?.type === 'incomplete' ? 'This step did not finish.' : undefined;
+  return toolFailure(result) ?? textOf(summary);
+};
 
 /** Gateway names tools <target>___<tool>; people only need the tool. */
 export const displayToolName = (toolName: string) => {
@@ -38,6 +56,7 @@ interface ToolRowProps {
   readonly detail?: string;
   readonly status: ToolStatus;
   readonly message?: string;
+  readonly children?: React.ReactNode;
 }
 
 /** One tool call in the conversation: what ran, on what, and how it ended. */
@@ -46,6 +65,7 @@ export const ToolRow: React.FC<ToolRowProps> = ({
   detail,
   status,
   message,
+  children,
 }: ToolRowProps) => (
   <div className="rounded border border-base-lighter px-2.5 py-1.5 font-content text-xs">
     <div className="flex flex-wrap items-baseline gap-x-2">
@@ -58,6 +78,7 @@ export const ToolRow: React.FC<ToolRowProps> = ({
       </span>
     </div>
     {message && <p className="mt-1 break-words">{message}</p>}
+    {children}
   </div>
 );
 
@@ -65,11 +86,12 @@ const ToolCallFallback: ToolCallMessagePartComponent = ({
   toolName,
   result,
   isError,
+  status,
 }) => (
   <ToolRow
     title={displayToolName(toolName)}
-    status={toolStatus(isError, result)}
-    message={isError ? toolError(result) : toolFailure(result)}
+    status={toolStatus(isError, result, status)}
+    message={toolMessage(isError, result, status)}
   />
 );
 

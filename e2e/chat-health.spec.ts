@@ -19,7 +19,7 @@ const run = (result: string, text: string): AgentEvent[] => [
 ];
 
 const healthyRun = run(
-  JSON.stringify({ ok: true, summary: 'Healthy' }),
+  JSON.stringify({ status: 'ok', summary: 'Healthy' }),
   'Yes, the Virtual Lab is healthy, with 1,000 synthetic cases available.',
 );
 
@@ -45,9 +45,8 @@ test('shows a plain message when the agent is unreachable', async ({ page }) => 
 
 test('marks a tool that reports a failure as Failed, with its reason', async ({ page }) => {
   await signIn(page);
-  // Today's ToolCallRow reads { ok: false }; Task 9 moves the contract to { status: "error" }.
   const failing = run(
-    JSON.stringify({ ok: false, summary: 'The Virtual Lab refused the login.' }),
+    JSON.stringify({ status: 'error', summary: 'The Virtual Lab refused the login.' }),
     'I could not check the Virtual Lab.',
   );
   await mockAgent(page, failing);

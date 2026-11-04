@@ -2,6 +2,7 @@ import React from 'react';
 import * as webStreams from 'node:stream/web';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { CoreProvider } from '@gen3/core';
 import ChatRuntimeProvider, { AGENT_ROUTE } from './ChatRuntimeProvider';
 import ChatThread from './ChatThread';
 
@@ -10,6 +11,12 @@ jest.mock('./MarkdownText', () => {
   const { MessagePartPrimitive } = jest.requireActual('@assistant-ui/react');
   return { __esModule: true, default: () => <MessagePartPrimitive.Text /> };
 });
+
+// The cohort bar's count is another page's concern, and would be a fetch of its own here.
+jest.mock('@gen3/core', () => ({
+  ...jest.requireActual('@gen3/core'),
+  useGetCountsQuery: () => ({ currentData: 1000 }),
+}));
 
 const FULL_TOOL_NAME = 'virtual-lab___check_virtual_lab_health';
 
@@ -24,7 +31,7 @@ const SUCCESSFUL_RUN = [
     type: 'TOOL_CALL_RESULT',
     messageId: 'tool-result',
     toolCallId: ids.toolCallId,
-    content: '{"ok":true,"cases":1000}',
+    content: '{"status":"ok","summary":"Healthy."}',
   },
   { type: 'TEXT_MESSAGE_START', messageId: ids.messageId, role: 'assistant' },
   { type: 'TEXT_MESSAGE_CONTENT', messageId: ids.messageId, delta: 'The lab reports ' },
@@ -41,7 +48,7 @@ const FAILED_RUN = [
 const failedToolRun = () =>
   SUCCESSFUL_RUN.map((event) =>
     event.type === 'TOOL_CALL_RESULT'
-      ? { ...event, content: '{"ok":false,"error":"auth_failed","summary":"The Virtual Lab refused the login."}' }
+      ? { ...event, content: '{"status":"error","summary":"The Virtual Lab refused the login."}' }
       : event,
   );
 
@@ -63,9 +70,11 @@ const sseResponse = (events: ReadonlyArray<object>) => {
 
 const renderChat = () =>
   render(
-    <ChatRuntimeProvider>
-      <ChatThread />
-    </ChatRuntimeProvider>,
+    <CoreProvider>
+      <ChatRuntimeProvider>
+        <ChatThread />
+      </ChatRuntimeProvider>
+    </CoreProvider>,
   );
 
 describe('Chat over AG-UI', () => {
