@@ -51,39 +51,70 @@ export const displayToolName = (toolName: string) => {
   return separator < 0 ? toolName : toolName.slice(separator + 3);
 };
 
+export const CHAT_BUTTON =
+  'rounded border border-secondary px-2 py-0.5 font-content text-xs font-semibold hover:bg-base-lightest disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary';
+
+const settingEntries = (settings: unknown): ReadonlyArray<[string, string]> =>
+  settings !== null && typeof settings === 'object'
+    ? Object.entries(settings).map(([name, value]) => [
+        name,
+        typeof value === 'string' ? value : JSON.stringify(value),
+      ])
+    : [];
+
 interface ToolRowProps {
   readonly title: string;
   readonly detail?: string;
   readonly status: ToolStatus;
   readonly message?: string;
+  /** The tool's input, shown when the step is expanded. */
+  readonly settings?: unknown;
   readonly children?: React.ReactNode;
 }
 
-/** One tool call in the conversation: what ran, on what, and how it ended. */
+/** One tool call in the conversation: what ran, on what, and how it ended. Expands to its settings and any error. */
 export const ToolRow: React.FC<ToolRowProps> = ({
   title,
   detail,
   status,
   message,
+  settings,
   children,
-}: ToolRowProps) => (
-  <div className="rounded border border-base-lighter px-2.5 py-1.5 font-content text-xs">
-    <div className="flex flex-wrap items-baseline gap-x-2">
-      <span className="font-heading font-semibold">{title}</span>
-      {detail && <span className="min-w-0 break-words">{detail}</span>}
-      <span
-        className={`ml-auto font-semibold ${status === 'Failed' ? 'text-utility-error' : ''}`}
-      >
-        {status}
-      </span>
+}: ToolRowProps) => {
+  const entries = settingEntries(settings);
+  const isFailed = status === 'Failed';
+  const failure = isFailed ? message : undefined;
+  return (
+    <div className="rounded border border-base-lighter px-2.5 py-1.5 font-content text-xs">
+      <div className="flex flex-wrap items-baseline gap-x-2">
+        <span className="font-heading font-semibold">{title}</span>
+        {detail && <span className="min-w-0 break-words">{detail}</span>}
+        <span
+          className={`ml-auto font-semibold ${status === 'Failed' ? 'text-utility-error' : ''}`}
+        >
+          {status}
+        </span>
+      </div>
+      {message && !isFailed && <p className="mt-1 break-words">{message}</p>}
+      {(failure || entries.length > 0) && (
+        <details open={isFailed} className="mt-1">
+          <summary className="cursor-pointer">Details</summary>
+          {failure && <p className="mt-1 break-words">{failure}</p>}
+          {entries.map(([name, value]) => (
+            <p key={name} className="mt-1 break-all">
+              <span className="font-semibold">{name}:</span> {value}
+            </p>
+          ))}
+        </details>
+      )}
+      {children}
     </div>
-    {message && <p className="mt-1 break-words">{message}</p>}
-    {children}
-  </div>
-);
+  );
+};
 
 const ToolCallFallback: ToolCallMessagePartComponent = ({
   toolName,
+  args,
   result,
   isError,
   status,
@@ -92,6 +123,7 @@ const ToolCallFallback: ToolCallMessagePartComponent = ({
     title={displayToolName(toolName)}
     status={toolStatus(isError, result, status)}
     message={toolMessage(isError, result, status)}
+    settings={args}
   />
 );
 

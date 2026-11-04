@@ -2,11 +2,9 @@ import React from 'react';
 import { ThreadPrimitive, useAuiState, type ToolCallMessagePartComponent } from '@assistant-ui/react';
 import { useCohortUndo } from '../useCohortSync';
 import type { CohortChange } from '../cohortSync';
-import { parseResult, toolMessage, toolStatus, ToolRow } from './ToolCallRow';
+import { CHAT_BUTTON as BUTTON, parseResult, toolMessage, toolStatus, ToolRow } from './ToolCallRow';
 
 const TITLE = 'Cohort Builder';
-const BUTTON =
-  'rounded border border-secondary px-2 py-0.5 font-content text-xs font-semibold hover:bg-base-lightest disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary';
 
 interface CohortResult {
   readonly status?: string;
@@ -48,11 +46,11 @@ const Undo: React.FC<{ readonly result: CohortResult }> = ({ result }) => {
   );
 };
 
-const UpdatedCohort: React.FC<{ readonly result: CohortResult }> = ({ result }) => {
+const UpdatedCohort: React.FC<{ readonly result: CohortResult; readonly settings: unknown }> = ({ result, settings }) => {
   const mapping = (result.changes ?? []).map(describeChange).join(' · ');
   const hasCounts = result.casesBefore !== undefined && result.casesAfter !== undefined;
   return (
-    <ToolRow title={`${TITLE} · Updated cohort`} status="Done">
+    <ToolRow title={`${TITLE} · Updated cohort`} status="Done" settings={settings}>
       <p className="mt-1 break-words">
         {mapping}
         {hasCounts && (
@@ -67,8 +65,8 @@ const UpdatedCohort: React.FC<{ readonly result: CohortResult }> = ({ result }) 
   );
 };
 
-const AmbiguousCohort: React.FC<{ readonly result: CohortResult }> = ({ result }) => (
-  <ToolRow title={`${TITLE} · Which one?`} status="Done" message={result.summary}>
+const AmbiguousCohort: React.FC<{ readonly result: CohortResult; readonly settings: unknown }> = ({ result, settings }) => (
+  <ToolRow title={`${TITLE} · Which one?`} status="Done" message={result.summary} settings={settings}>
     <div className="mt-1 flex flex-wrap gap-2">
       {(result.options ?? []).map((option) => (
         <ThreadPrimitive.Suggestion
@@ -84,12 +82,12 @@ const AmbiguousCohort: React.FC<{ readonly result: CohortResult }> = ({ result }
   </ToolRow>
 );
 
-const CohortToolUI: ToolCallMessagePartComponent = ({ result, isError, status }) => {
+const CohortToolUI: ToolCallMessagePartComponent = ({ args, result, isError, status }) => {
   const rowStatus = toolStatus(isError, result, status);
   if (rowStatus === 'Running') {
     return (
       <div data-testid="cohort-tool-skeleton" className="animate-pulse">
-        <ToolRow title={`${TITLE} · Updating cohort`} status="Running" />
+        <ToolRow title={`${TITLE} · Updating cohort`} status="Running" settings={args} />
       </div>
     );
   }
@@ -99,17 +97,19 @@ const CohortToolUI: ToolCallMessagePartComponent = ({ result, isError, status })
         title={`${TITLE} · Update cohort`}
         status="Failed"
         message={toolMessage(isError, result, status)}
+        settings={args}
       />
     );
   }
   const parsed = parseResult(result) as CohortResult;
-  if (parsed?.status === 'ok') return <UpdatedCohort result={parsed} />;
-  if (parsed?.status === 'ambiguous') return <AmbiguousCohort result={parsed} />;
+  if (parsed?.status === 'ok') return <UpdatedCohort result={parsed} settings={args} />;
+  if (parsed?.status === 'ambiguous') return <AmbiguousCohort result={parsed} settings={args} />;
   return (
     <ToolRow
       title={`${TITLE} · Cohort not changed`}
       status="Done"
       message={toolMessage(isError, result, status)}
+      settings={args}
     />
   );
 };

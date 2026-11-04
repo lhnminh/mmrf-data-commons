@@ -1,4 +1,6 @@
-import { displayToolName, toolFailure, toolMessage, toolStatus } from './ToolCallRow';
+import React from 'react';
+import { render, screen } from '@testing-library/react';
+import { displayToolName, ToolRow, toolFailure, toolMessage, toolStatus } from './ToolCallRow';
 
 describe('displayToolName', () => {
   it('removes the Gateway target prefix', () => {
@@ -60,5 +62,48 @@ describe('tool results', () => {
     expect(toolMessage(false, undefined, { type: 'incomplete', reason: 'error' })).toBe(
       'This step did not finish.',
     );
+  });
+});
+
+describe('ToolRow details', () => {
+  const details = (container: HTMLElement) => container.querySelector('details');
+
+  it('folds away the settings of a step', () => {
+    const { container } = render(
+      <ToolRow title="Step" status="Done" settings={{ gene: 'KRAS', maxGenes: 3, list: [{ a: 1 }] }} />,
+    );
+    expect(details(container)?.open).toBe(false);
+    expect(details(container)?.textContent).toContain('gene');
+    expect(details(container)?.textContent).toContain('KRAS');
+    expect(details(container)?.textContent).toContain('3');
+    expect(details(container)?.textContent).toContain('[{"a":1}]');
+  });
+
+  it('has nothing to expand without settings', () => {
+    const { container } = render(<ToolRow title="Step" status="Done" settings={{}} message="Fine." />);
+    expect(details(container)).toBeNull();
+    expect(screen.getByText('Fine.')).toBeTruthy();
+  });
+
+  it('keeps an ordinary message outside the details', () => {
+    const { container } = render(
+      <ToolRow title="Step" status="Done" settings={{ gene: 'EGFR' }} message="Not in this dataset." />,
+    );
+    expect(details(container)?.textContent).not.toContain('Not in this dataset.');
+    expect(screen.getByText('Not in this dataset.')).toBeTruthy();
+  });
+
+  it('opens on a failure and shows it', () => {
+    const { container } = render(
+      <ToolRow title="Step" status="Failed" settings={{ gene: 'KRAS' }} message="Timed out" />,
+    );
+    expect(details(container)?.open).toBe(true);
+    expect(details(container)?.textContent).toContain('Timed out');
+  });
+
+  it('shows a failure with no settings', () => {
+    const { container } = render(<ToolRow title="Step" status="Failed" message="Timed out" />);
+    expect(details(container)?.open).toBe(true);
+    expect(screen.getByText('Timed out')).toBeTruthy();
   });
 });

@@ -21,6 +21,10 @@ const basepath = PROTEINPAINT_API;
 
 interface PpProps {
   basepath?: string;
+  /** Draws on this filter instead of the selected cohort, so the chart keeps its own. */
+  filter0Override?: object;
+  /** Opens the plot on this gene. */
+  gene?: string;
 }
 
 export const ProteinPaintWrapper: FC<PpProps> = (props: PpProps) => {
@@ -28,7 +32,7 @@ export const ProteinPaintWrapper: FC<PpProps> = (props: PpProps) => {
   const currentCohort = useCoreSelector((state) =>
     selectCurrentCohortCaseFilters(state, COHORT_FILTER_INDEX),
   );
-  const filter0 = isDemoMode ? null : buildCohortGqlOperator(currentCohort);
+  const filter0 = props.filter0Override ?? (isDemoMode ? null : buildCohortGqlOperator(currentCohort));
   const userDetails = useFetchUserDetailsQuery()
 
   // to track reusable instance for mds3 skewer track
@@ -97,7 +101,7 @@ export const ProteinPaintWrapper: FC<PpProps> = (props: PpProps) => {
       });
     },
 
-    [ isDemoMode, filter0, userDetails.currentData ],
+    [ isDemoMode, filter0, userDetails.currentData, props.gene ],
   );
 
   const divRef = useRef<HTMLDivElement>(null);
@@ -130,6 +134,7 @@ interface Mds3Arg {
   host: string;
   filter0?: FilterSet;
   geneSearch4GDCmds3: any;
+  geneSymbol?: string;
   allow2selectSamples: SelectSamples;
 }
 
@@ -147,6 +152,7 @@ function getLollipopTrack(
 	  geneSearch4GDCmds3: { snvIndelOnly: true },
     hide_dsHandles: true,
     filter0,
+    ...(props.gene ? { geneSymbol: props.gene } : {}),
     allow2selectSamples: {
       buttonText: "Create cohort",
       attributes: [{

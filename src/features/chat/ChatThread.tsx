@@ -27,8 +27,8 @@ const EmptyState: React.FC = () => (
       What do you want to find out?
     </h2>
     <p className="mb-4 mt-1 font-content text-sm text-base-content-dark">
-      Check whether the Virtual Lab is healthy. This early version of Chat
-      can&apos;t run analyses yet.
+      Ask what&apos;s mutated in a group of patients, or where a gene&apos;s
+      mutations fall on the protein.
     </p>
     <div className="flex flex-col gap-2">
       {SUGGESTED_PROMPTS.map((prompt) => (
@@ -108,7 +108,8 @@ const ChatThread: React.FC = () => {
       <ThreadPrimitive.Viewport
         turnAnchor="top"
         scrollToBottomOnInitialize={false}
-        className="flex flex-1 flex-col overflow-y-auto overflow-x-hidden pt-6"
+        // A size container, so a chart can take the thread's width from inside the text column.
+        className="flex flex-1 flex-col overflow-y-auto overflow-x-hidden pt-6 [container-type:inline-size]"
       >
         <AuiIf condition={(s) => s.thread.isEmpty}>
           <EmptyState />
