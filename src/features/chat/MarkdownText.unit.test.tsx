@@ -61,6 +61,37 @@ describe('MarkdownText', () => {
     expect(screen.queryByRole('button')).toBeNull();
   });
 
+  it('keeps finished answers mounted when another message changes', () => {
+    mockMessage = { id: 'answer', status: { type: 'complete' } };
+    mockMessages = [{ id: 'answer', role: 'assistant', content: [MATRIX] }];
+    const { rerender } = show('Observed: 287.');
+    const before = screen.getByRole('button', { name: '287, from OncoMatrix' });
+
+    mockMessages = [...mockMessages, { id: 'next', role: 'assistant', content: [] }];
+    rerender(React.createElement(MarkdownText as unknown as React.FC<object>, { text: 'Observed: 287.' } as object));
+
+    expect(screen.getByRole('button', { name: '287, from OncoMatrix' })).toBe(before);
+  });
+
+  it('links an answer that uses no section labels', () => {
+    mockMessage = { id: 'answer', status: { type: 'complete' } };
+    mockMessages = [{ id: 'answer', role: 'assistant', content: [MATRIX] }];
+    show('There are 287 samples.');
+    expect(screen.getByRole('button', { name: '287, from OncoMatrix' })).toBeTruthy();
+  });
+
+  it('leaves text before labelled sections unlinked', () => {
+    mockMessage = { id: 'answer', status: { type: 'complete' } };
+    mockMessages = [{ id: 'answer', role: 'assistant', content: [MATRIX] }];
+    show('Now using 287.\nObserved: none.');
+    expect(screen.queryByRole('button')).toBeNull();
+  });
+
+  it('mutes Limits with a colour the theme defines', () => {
+    show('Limits: synthetic.');
+    expect(screen.getByRole('heading', { name: 'Limits' }).closest('section')?.className).toContain('text-gunmetal/70');
+  });
+
   it('labels the sections of an answer', () => {
     show('**Observed:** KRAS has 14 variants.\n\n**Limits:** Synthetic data.');
     expect(screen.getByRole('heading', { name: 'Observed' })).toBeTruthy();

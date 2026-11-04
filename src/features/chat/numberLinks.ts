@@ -27,8 +27,6 @@ const TOOL_TITLES: Record<string, string> = {
   show_survival: 'Correlation Plot',
 };
 
-const NO_SOURCES: NumberSources = new Map();
-
 export const extractNumbers = (text: string): ReadonlyArray<NumberToken> =>
   Array.from(text.matchAll(NUMBER), (match) => ({
     raw: match[0],
@@ -75,8 +73,13 @@ export const numberSources = (tools: ReadonlyArray<ToolSource>): NumberSources =
   return sources;
 };
 
-/** Sources for a message's numbers, once it has finished, so links don't reflow text as it streams. */
-export const linkableSources = (
-  parts: ReadonlyArray<unknown>,
+/**
+ * A turn's linkable sources as a string, once the message has finished, so links don't reflow
+ * text as it streams. `thread.messages` changes with every streamed token, so
+ * selecting this instead keeps a finished answer from rendering, and remounting, each time.
+ */
+export const linkableSourcesKey = (
+  messages: ReadonlyArray<TurnMessage>,
+  messageId: string,
   status: { readonly type: string } | undefined,
-): NumberSources => (status?.type === 'complete' ? numberSources(toolSources(parts)) : NO_SOURCES);
+): string => JSON.stringify(status?.type === 'complete' ? toolSources(turnParts(messages, messageId)) : []);

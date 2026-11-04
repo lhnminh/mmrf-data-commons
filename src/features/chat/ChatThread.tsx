@@ -112,7 +112,7 @@ const ChatThread: React.FC = () => {
 
   return (
     // 115px is Chat's slim frame above the thread, so the message box stays on screen.
-    <ThreadPrimitive.Root className="flex h-[calc(100vh-115px)] min-h-[480px] flex-col bg-base-max">
+    <ThreadPrimitive.Root className="flex h-[calc(100vh-115px)] min-h-[480px] flex-col md:min-h-0 bg-base-max">
       <ChatEvidenceProvider>
         <ThreadPrimitive.Viewport
           turnAnchor="top"

@@ -1,4 +1,4 @@
-import { extractNumbers, linkableSources, numberSources, toolSources, turnParts } from './numberLinks';
+import { extractNumbers, linkableSourcesKey, numberSources, toolSources, turnParts } from './numberLinks';
 
 const values = (text: string) => extractNumbers(text).map((n) => n.value);
 
@@ -62,16 +62,6 @@ describe('numberSources', () => {
   });
 });
 
-describe('linkableSources', () => {
-  const parts = [tool('a', '148 samples')];
-
-  it('adds no links until the message finishes', () => {
-    expect(linkableSources(parts, { type: 'running' }).size).toBe(0);
-    expect(linkableSources(parts, undefined).size).toBe(0);
-    expect(linkableSources(parts, { type: 'complete' }).size).toBe(1);
-  });
-});
-
 describe('turnParts', () => {
   const user = (id: string) => ({ id, role: 'user', content: [{ type: 'text', text: 'q' }] });
   const assistant = (id: string, ...content: object[]) => ({ id, role: 'assistant', content });
@@ -96,5 +86,27 @@ describe('turnParts', () => {
 
   it('is empty for an unknown message', () => {
     expect(turnParts([user('u1')], 'nope')).toEqual([]);
+  });
+});
+
+describe('linkableSourcesKey', () => {
+  const message = (content: object[]) => [{ id: 'a', role: 'assistant', content }];
+
+  it('stays equal when the messages change but their sources do not', () => {
+    const complete = { type: 'complete' };
+    const first = linkableSourcesKey(message([tool('a', '148 samples')]), 'a', complete);
+    const second = linkableSourcesKey(message([tool('a', '148 samples')]), 'a', complete);
+    expect(second).toBe(first);
+  });
+
+  it('changes when a source changes', () => {
+    const complete = { type: 'complete' };
+    expect(linkableSourcesKey(message([tool('a', '148 samples')]), 'a', complete)).not.toBe(
+      linkableSourcesKey(message([tool('a', '149 samples')]), 'a', complete),
+    );
+  });
+
+  it('is empty while the message streams', () => {
+    expect(linkableSourcesKey(message([tool('a', '148 samples')]), 'a', { type: 'running' })).toBe('[]');
   });
 });

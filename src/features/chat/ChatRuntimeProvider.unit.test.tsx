@@ -128,6 +128,13 @@ describe('Chat over AG-UI', () => {
     expect(screen.queryByRole('button', { name: 'Stop' })).toBeNull();
   });
 
+  // Chat clips the page on a wide screen, so a thread taller than the window would hide the message box.
+  it('lets the thread shrink to fit a short, wide window', () => {
+    renderChat();
+    const thread = screen.getByRole('textbox', { name: 'Ask about the Virtual Lab' }).closest('.min-h-\\[480px\\]');
+    expect(thread?.className).toContain('md:min-h-0');
+  });
+
   it('asks for a follow-up after the first message', async () => {
     global.fetch = jest.fn().mockResolvedValue(sseResponse(SUCCESSFUL_RUN));
 

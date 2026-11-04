@@ -9,7 +9,7 @@ export interface ChartCohort {
   readonly revision?: number;
 }
 
-const NOTE = 'mt-1 font-content text-xs text-base-content-dark';
+const NOTE = 'mt-1 font-content text-xs text-gunmetal/70';
 
 export const ChartLoading: React.FC = () => <p className={NOTE}>Loading the chart…</p>;
 
